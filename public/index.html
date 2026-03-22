@@ -7,8 +7,7 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Hiragino Kaku Gothic Pro','Noto Sans JP',Meiryo,sans-serif;background:#f0f4f8;min-height:100vh}
-input,textarea,select{font-family:inherit}
-button{font-family:inherit}
+input,textarea,select,button{font-family:inherit}
 @keyframes spin{to{transform:rotate(360deg)}}
 .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
 </style>
@@ -22,10 +21,8 @@ button{font-family:inherit}
 const {useState,useEffect,useRef,useCallback}=React;
 
 /* ─── CONSTANTS ─── */
-const API_URL="https://api.anthropic.com/v1/messages";
 const MODEL="claude-sonnet-4-20250514";
 const S_PROPS="re_props_v10";
-const S_KEY="re_apikey_v10";
 const NAVY="#002060",NAVY2="#003a8c",GOLD="#c9a84c",GREEN="#1a7a4a",RED="#c0392b",LIGHT="#f0f4f8";
 
 /* ─── UTILS ─── */
@@ -48,17 +45,17 @@ const toB64=f=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res
 const lsGet=k=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch{return null;}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch(e){console.error(e);}};
 
-/* ─── API ─── */
-async function callClaude(apiKey,system,userContent){
+/* ─── API (サーバー経由・APIキー不要) ─── */
+async function callClaude(system, userContent){
   const body={model:MODEL,max_tokens:4096,messages:[{role:"user",content:userContent}]};
   if(system)body.system=system;
-  const res=await fetch(API_URL,{
+  const res=await fetch("/api/claude",{
     method:"POST",
-    headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+    headers:{"Content-Type":"application/json"},
     body:JSON.stringify(body)
   });
   const data=await res.json();
-  if(!res.ok)throw new Error(data.error?.message||`HTTP ${res.status}`);
+  if(!res.ok)throw new Error(data.error?.message||data.error||`HTTP ${res.status}`);
   return data.content.find(b=>b.type==="text")?.text||"";
 }
 
@@ -139,8 +136,6 @@ function App(){
   const [search,setSearch]=useState("");
   const [sortBy,setSortBy]=useState("date");
   const [fStatus,setFStatus]=useState("all");
-  const [apiKey,setApiKey]=useState("");
-  const [apiModal,setApiModal]=useState(false);
   const [fTab,setFTab]=useState("maisoku");
   const [maText,setMaText]=useState("");
   const [upFile,setUpFile]=useState(null);
@@ -150,8 +145,6 @@ function App(){
 
   useEffect(()=>{
     const p=lsGet(S_PROPS);if(Array.isArray(p))setProps(p);
-    const k=lsGet(S_KEY);
-    if(k)setApiKey(k);else setApiModal(true);
   },[]);
 
   const persist=useCallback(list=>{setProps(list);lsSet(S_PROPS,list);},[]);
@@ -160,8 +153,7 @@ function App(){
   const filtered=props.filter(p=>{
     const q=search.toLowerCase();
     const ok=!q||[p.name,p.address,p.station,p.currentStatus].some(s=>s?.toLowerCase().includes(q));
-    const fs=fStatus==="all"||p.currentStatus===fStatus||
-      (fStatus==="サブリース"&&p.currentStatus?.includes("サブリース"));
+    const fs=fStatus==="all"||p.currentStatus===fStatus||(fStatus==="サブリース"&&p.currentStatus?.includes("サブリース"));
     return ok&&fs;
   }).sort((a,b)=>{
     if(sortBy==="date")return new Date(b.updatedAt||0)-new Date(a.updatedAt||0);
@@ -187,22 +179,18 @@ function App(){
   };
   const upd=(k,v)=>setForm(prev=>({...prev,[k]:v}));
 
-  /* AI: テキスト解析 */
   const readText=async()=>{
-    if(!apiKey){setApiModal(true);return;}
     if(!maText.trim())return;
     setLoading(true);setAiMsg("⏳ テキストを解析中...");
     try{
-      const raw=await callClaude(apiKey,SYS_EXTRACT,`以下のマイソク情報を解析してください：\n\n${maText}`);
+      const raw=await callClaude(SYS_EXTRACT,`以下のマイソク情報を解析してください：\n\n${maText}`);
       applyParsed(JSON.parse(raw.replace(/```json|```/g,"").trim()));
       setAiMsg("✅ 読み取り完了！「基本情報」タブで内容を確認してください");setFTab("basic");
     }catch(e){setAiMsg(`❌ エラー: ${e.message}`);}
     setLoading(false);
   };
 
-  /* AI: ファイル解析 */
   const readFile=async()=>{
-    if(!apiKey){setApiModal(true);return;}
     if(!upFile)return;
     setLoading(true);setAiMsg("⏳ ファイルを解析中...");
     try{
@@ -211,7 +199,7 @@ function App(){
       const content=mt==="application/pdf"
         ?[{type:"document",source:{type:"base64",media_type:"application/pdf",data:b64}},{type:"text",text:"このPDFの販売図面から物件情報をJSONで抽出してください。"}]
         :[{type:"image",source:{type:"base64",media_type:mt,data:b64}},{type:"text",text:"この画像の販売図面から物件情報をJSONで抽出してください。"}];
-      const raw=await callClaude(apiKey,SYS_EXTRACT,content);
+      const raw=await callClaude(SYS_EXTRACT,content);
       applyParsed(JSON.parse(raw.replace(/```json|```/g,"").trim()));
       setAiMsg(`✅ ${mt.startsWith("image/")?"画像":"PDF"}の読み取り完了！「基本情報」タブで確認してください`);setFTab("basic");
     }catch(e){setAiMsg(`❌ エラー: ${e.message}`);}
@@ -223,9 +211,7 @@ function App(){
     setForm(prev=>{const u={...prev};fields.forEach(k=>{if(p[k]!=null&&p[k]!=="")u[k]=p[k];});return u;});
   };
 
-  /* AI: レポート生成 */
   const genReport=async()=>{
-    if(!apiKey){setApiModal(true);return;}
     setLoading(true);setAiMsg("⏳ AIが調査・分析レポートを生成中...\n（30〜60秒かかる場合があります）");
     try{
       const info=JSON.stringify({
@@ -237,7 +223,7 @@ function App(){
         askingPrice:form.askingPrice,currentStatus:form.currentStatus,sublease:form.sublease,
         monthlyCF:getCF(form),
       },null,2);
-      const raw=await callClaude(apiKey,SYS_REPORT,`以下の物件情報を分析し、詳細な調査レポートをJSONで生成してください：\n\n${info}`);
+      const raw=await callClaude(SYS_REPORT,`以下の物件情報を分析し、詳細な調査レポートをJSONで生成してください：\n\n${info}`);
       const r=JSON.parse(raw.replace(/```json|```/g,"").trim());
       setForm(prev=>({
         ...prev,
@@ -256,31 +242,19 @@ function App(){
 
   return(
     <div style={{fontFamily:"inherit",minHeight:"100vh",background:LIGHT}}>
-      {/* HEADER */}
       <header style={{background:NAVY,color:"#fff",padding:"0 20px",display:"flex",alignItems:"center",height:52,gap:8,position:"sticky",top:0,zIndex:100,boxShadow:"0 2px 8px rgba(0,0,32,.3)"}}>
         <div style={{fontSize:17,fontWeight:"bold",cursor:"pointer",marginRight:12,letterSpacing:"-.3px",whiteSpace:"nowrap"}} onClick={()=>setView("list")}>
-          🏢 不動産投資分析
-          <sup style={{fontSize:9,opacity:.6,marginLeft:3}}>v10</sup>
+          🏢 不動産投資分析<sup style={{fontSize:9,opacity:.6,marginLeft:3}}>v10</sup>
         </div>
         {[
           {id:"list",label:"📋 一覧",fn:()=>setView("list"),active:view==="list"},
           {id:"new",label:"＋ 新規登録",fn:doNew,active:view==="form"&&!isEdit},
         ].map(n=>(
-          <button key={n.id} onClick={n.fn} style={{
-            background:n.active?"rgba(255,255,255,.2)":"transparent",
-            color:"#fff",border:"none",padding:"5px 13px",borderRadius:6,
-            cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:5,whiteSpace:"nowrap"
-          }}>
+          <button key={n.id} onClick={n.fn} style={{background:n.active?"rgba(255,255,255,.2)":"transparent",color:"#fff",border:"none",padding:"5px 13px",borderRadius:6,cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:5,whiteSpace:"nowrap"}}>
             {n.label}
             {n.id==="list"&&props.length>0&&<span style={{background:"rgba(255,255,255,.25)",borderRadius:10,padding:"1px 6px",fontSize:11}}>{props.length}</span>}
           </button>
         ))}
-        <div style={{marginLeft:"auto",display:"flex",gap:8,alignItems:"center"}}>
-          <span style={{fontSize:11,opacity:.6,display:window.innerWidth>600?"inline":"none"}}>{apiKey?"✅ API設定済":"⚠️ 未設定"}</span>
-          <button onClick={()=>setApiModal(true)} style={{background:"rgba(255,255,255,.15)",border:"1px solid rgba(255,255,255,.3)",color:"#fff",padding:"4px 11px",borderRadius:6,cursor:"pointer",fontSize:12}}>
-            ⚙️ API設定
-          </button>
-        </div>
       </header>
 
       <main style={{padding:"20px",maxWidth:1200,margin:"0 auto"}}>
@@ -288,8 +262,6 @@ function App(){
         {view==="form"&&<FormView data={form} upd={upd} fTab={fTab} setFTab={setFTab} maText={maText} setMaText={setMaText} upFile={upFile} setUpFile={setUpFile} fileRef={fileRef} onReadText={readText} onReadFile={readFile} onGenReport={genReport} onSave={doSave} onCancel={()=>setView("list")} aiMsg={aiMsg} loading={loading} isEdit={isEdit}/>}
         {view==="report"&&selProp&&<ReportView prop={selProp} onEdit={()=>doEdit(selProp)} onBack={()=>setView("list")}/>}
       </main>
-
-      {apiModal&&<ApiModal cur={apiKey} onSave={k=>{setApiKey(k);lsSet(S_KEY,k);setApiModal(false);}} onClose={()=>setApiModal(false)}/>}
     </div>
   );
 }
@@ -306,22 +278,15 @@ function ListView({props,total,search,setSearch,sortBy,setSortBy,fStatus,setFSta
         <button onClick={onNew} style={S.btn(NAVY,{fontSize:13,padding:"7px 16px"})}>＋ 新規物件を登録</button>
         <div style={{marginLeft:"auto",fontSize:13,color:"#666"}}>{props.length}件表示 / 計{total}件</div>
       </div>
-
-      {/* Search bar */}
       <div style={{...S.card(),marginBottom:14,padding:14,display:"flex",flexWrap:"wrap",gap:10,alignItems:"center"}}>
         <div style={{position:"relative",flex:"1 1 240px"}}>
           <span style={{position:"absolute",left:9,top:"50%",transform:"translateY(-50%)",color:"#aaa"}}>🔍</span>
-          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="物件名・住所・駅名で検索..."
-            style={{...S.inp(),paddingLeft:32}}/>
+          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="物件名・住所・駅名で検索..." style={{...S.inp(),paddingLeft:32}}/>
         </div>
         <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
           <span style={{fontSize:12,color:"#666",alignSelf:"center"}}>現況：</span>
           {statuses.map(s=>(
-            <button key={s.id} onClick={()=>setFStatus(s.id)} style={{
-              background:fStatus===s.id?NAVY:"transparent",color:fStatus===s.id?"#fff":"#555",
-              border:`1px solid ${fStatus===s.id?NAVY:"#cdd5e0"}`,padding:"4px 10px",
-              borderRadius:5,cursor:"pointer",fontSize:12,whiteSpace:"nowrap"
-            }}>{s.label}</button>
+            <button key={s.id} onClick={()=>setFStatus(s.id)} style={{background:fStatus===s.id?NAVY:"transparent",color:fStatus===s.id?"#fff":"#555",border:`1px solid ${fStatus===s.id?NAVY:"#cdd5e0"}`,padding:"4px 10px",borderRadius:5,cursor:"pointer",fontSize:12,whiteSpace:"nowrap"}}>{s.label}</button>
           ))}
         </div>
         <div style={{display:"flex",gap:6,alignItems:"center"}}>
@@ -334,18 +299,14 @@ function ListView({props,total,search,setSearch,sortBy,setSortBy,fStatus,setFSta
           </select>
         </div>
       </div>
-
       {props.length===0&&(
         <div style={{textAlign:"center",padding:"80px 20px",color:"#888"}}>
           <div style={{fontSize:48,marginBottom:16}}>🏢</div>
-          <div style={{fontSize:18,fontWeight:"bold",marginBottom:8,color:"#555"}}>
-            {total===0?"物件データがありません":"検索結果がありません"}
-          </div>
+          <div style={{fontSize:18,fontWeight:"bold",marginBottom:8,color:"#555"}}>{total===0?"物件データがありません":"検索結果がありません"}</div>
           <div style={{fontSize:13,marginBottom:24}}>{total===0?"「新規物件を登録」から最初の物件を追加しましょう":"検索条件を変更してください"}</div>
           {total===0&&<button onClick={onNew} style={S.btn(NAVY)}>＋ 新規物件を登録</button>}
         </div>
       )}
-
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(340px,1fr))",gap:16}}>
         {props.map(p=><PropCard key={p.id} p={p} onView={onView} onEdit={onEdit} onDelete={onDelete}/>)}
       </div>
@@ -354,26 +315,21 @@ function ListView({props,total,search,setSearch,sortBy,setSortBy,fStatus,setFSta
 }
 
 function PropCard({p,onView,onEdit,onDelete}){
-  const cf=getCF(p);
-  const yl=getYld(p);
-  const cfColor=cf>=0?GREEN:RED;
+  const cf=getCF(p);const yl=getYld(p);
   const [hover,setHover]=useState(false);
   return(
     <div style={{...S.card(),position:"relative",boxShadow:hover?"0 4px 16px rgba(0,32,96,.13)":"0 1px 4px rgba(0,0,0,.08)",transition:"box-shadow .2s",cursor:"pointer"}}
-      onMouseEnter={()=>setHover(true)} onMouseLeave={()=>setHover(false)}
-      onClick={()=>onView(p.id)}>
+      onMouseEnter={()=>setHover(true)} onMouseLeave={()=>setHover(false)} onClick={()=>onView(p.id)}>
       <div style={{position:"absolute",top:12,right:12}}>
         <span style={S.badge(p.currentStatus?.includes("サブリース")?GOLD:p.currentStatus==="空室"?RED:GREEN,{fontSize:10,whiteSpace:"nowrap"})}>
           {p.currentStatus||"未設定"}
         </span>
       </div>
-      <div style={{fontWeight:"bold",fontSize:15,color:NAVY,marginBottom:4,paddingRight:90,lineHeight:1.3}}>
-        {p.name||"（物件名未設定）"}
-      </div>
+      <div style={{fontWeight:"bold",fontSize:15,color:NAVY,marginBottom:4,paddingRight:90,lineHeight:1.3}}>{p.name||"（物件名未設定）"}</div>
       <div style={{fontSize:12,color:"#666",marginBottom:10}}>{p.station||p.address||"所在地未設定"}</div>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:7,marginBottom:8}}>
         {[
-          {l:"月間CF",v:`${cf>=0?"+":""}${fmt(cf)}円`,c:cfColor},
+          {l:"月間CF",v:`${cf>=0?"+":""}${fmt(cf)}円`,c:cf>=0?GREEN:RED},
           {l:"表面利回り",v:yl?yl.toFixed(1)+"%":"−",c:yl&&yl>=5?GREEN:yl?"#e07b00":RED},
           {l:"ローン残債",v:p.loanBalance?p.loanBalance+"万円":"−",c:"#555"},
         ].map(m=>(
@@ -384,19 +340,14 @@ function PropCard({p,onView,onEdit,onDelete}){
         ))}
       </div>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:7,marginBottom:10}}>
-        {[
-          {l:"賃料",v:fmtY(p.rent)},
-          {l:"管理費+修繕",v:fmtY((Number(p.managementFee)||0)+(Number(p.repairFund)||0)||null)},
-        ].map(m=>(
+        {[{l:"賃料",v:fmtY(p.rent)},{l:"管理費+修繕",v:fmtY((Number(p.managementFee)||0)+(Number(p.repairFund)||0)||null)}].map(m=>(
           <div key={m.l} style={{background:"#f8fafc",borderRadius:6,padding:"5px 8px",textAlign:"center"}}>
             <div style={{fontSize:10,color:"#888",marginBottom:1}}>{m.l}</div>
             <div style={{fontSize:12,fontWeight:"bold",color:"#333"}}>{m.v}</div>
           </div>
         ))}
       </div>
-      <div style={{fontSize:11,color:"#aaa",marginBottom:10}}>
-        {p.builtDate||"築年月不明"} | {p.area||"−"}㎡ | {p.floor||"−"} | 更新：{fmtD(p.updatedAt)}
-      </div>
+      <div style={{fontSize:11,color:"#aaa",marginBottom:10}}>{p.builtDate||"築年月不明"} | {p.area||"−"}㎡ | {p.floor||"−"} | 更新：{fmtD(p.updatedAt)}</div>
       <div style={{display:"flex",gap:6}}>
         <button onClick={e=>{e.stopPropagation();onView(p.id);}} style={S.btn(NAVY,{flex:1,padding:"6px 10px",fontSize:12})}>📊 レポートを見る</button>
         <button onClick={e=>{e.stopPropagation();onEdit(p);}} style={S.btn(NAVY2,{padding:"6px 10px",fontSize:12})}>✏️</button>
@@ -411,29 +362,18 @@ function PropCard({p,onView,onEdit,onDelete}){
    FORM VIEW
 ════════════════════════════════════════════ */
 function FormView({data,upd,fTab,setFTab,maText,setMaText,upFile,setUpFile,fileRef,onReadText,onReadFile,onGenReport,onSave,onCancel,aiMsg,loading,isEdit}){
-  const tabs=[
-    {id:"maisoku",label:"📄 マイソク読み取り"},
-    {id:"basic",label:"🏢 基本情報"},
-    {id:"financial",label:"💰 財務情報"},
-    {id:"sale",label:"🏷️ 売却設定"},
-    {id:"ai",label:"🤖 AIレポート生成"},
-  ];
-  const cf=getCF(data);
-  const yl=getYld(data);
+  const tabs=[{id:"maisoku",label:"📄 マイソク読み取り"},{id:"basic",label:"🏢 基本情報"},{id:"financial",label:"💰 財務情報"},{id:"sale",label:"🏷️ 売却設定"},{id:"ai",label:"🤖 AIレポート生成"}];
+  const cf=getCF(data);const yl=getYld(data);
   return(
     <div>
       <div style={{display:"flex",alignItems:"center",marginBottom:14,gap:10,flexWrap:"wrap"}}>
         <button onClick={onCancel} style={{background:"transparent",border:"1px solid #cdd5e0",padding:"6px 12px",borderRadius:6,cursor:"pointer",fontSize:13}}>← 一覧へ</button>
-        <h2 style={{margin:0,fontSize:17,color:NAVY,fontWeight:"bold"}}>
-          {isEdit?`編集：${data.name||"（物件名未設定）"}`:"新規物件登録"}
-        </h2>
+        <h2 style={{margin:0,fontSize:17,color:NAVY,fontWeight:"bold"}}>{isEdit?`編集：${data.name||"（物件名未設定）"}`:"新規物件登録"}</h2>
         {loading&&<span style={{fontSize:12,color:GOLD}}><span className="spinner"/>処理中...</span>}
       </div>
-
-      {/* Quick metrics */}
       {(data.rent||data.loanPayment)&&(
         <div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap"}}>
-          <div style={{background:"#fff",border:`1px solid ${(cf>=0?GREEN:RED)}30`,borderRadius:6,padding:"5px 12px",display:"flex",gap:8,alignItems:"center"}}>
+          <div style={{background:"#fff",border:`1px solid ${cf>=0?GREEN:RED}30`,borderRadius:6,padding:"5px 12px",display:"flex",gap:8,alignItems:"center"}}>
             <span style={{fontSize:11,color:"#666"}}>月間CF</span>
             <span style={{fontSize:14,fontWeight:"bold",color:cf>=0?GREEN:RED}}>{cf>=0?"+":""}{fmtY(cf)}</span>
           </div>
@@ -443,18 +383,11 @@ function FormView({data,upd,fTab,setFTab,maText,setMaText,upFile,setUpFile,fileR
           </div>}
         </div>
       )}
-
-      {/* Tabs */}
       <div style={{display:"flex",gap:0,borderBottom:"2px solid #e2e8f0",flexWrap:"wrap"}}>
         {tabs.map(t=>(
-          <button key={t.id} onClick={()=>setFTab(t.id)} style={{
-            background:"transparent",border:"none",padding:"10px 14px",cursor:"pointer",
-            fontSize:12,color:fTab===t.id?NAVY:"#666",fontWeight:fTab===t.id?"bold":"normal",
-            borderBottom:fTab===t.id?`3px solid ${NAVY}`:"3px solid transparent",marginBottom:-2,whiteSpace:"nowrap"
-          }}>{t.label}</button>
+          <button key={t.id} onClick={()=>setFTab(t.id)} style={{background:"transparent",border:"none",padding:"10px 14px",cursor:"pointer",fontSize:12,color:fTab===t.id?NAVY:"#666",fontWeight:fTab===t.id?"bold":"normal",borderBottom:fTab===t.id?`3px solid ${NAVY}`:"3px solid transparent",marginBottom:-2,whiteSpace:"nowrap"}}>{t.label}</button>
         ))}
       </div>
-
       <div style={{...S.card(),borderTopLeftRadius:0,borderTopRightRadius:0,padding:22}}>
         {fTab==="maisoku"&&<TabMaisoku maText={maText} setMaText={setMaText} upFile={upFile} setUpFile={setUpFile} fileRef={fileRef} onReadText={onReadText} onReadFile={onReadFile} aiMsg={aiMsg} loading={loading} onNext={()=>setFTab("basic")}/>}
         {fTab==="basic"&&<TabBasic data={data} upd={upd}/>}
@@ -462,11 +395,8 @@ function FormView({data,upd,fTab,setFTab,maText,setMaText,upFile,setUpFile,fileR
         {fTab==="sale"&&<TabSale data={data} upd={upd}/>}
         {fTab==="ai"&&<TabAI data={data} onGenReport={onGenReport} aiMsg={aiMsg} loading={loading}/>}
       </div>
-
       <div style={{display:"flex",gap:10,marginTop:14,alignItems:"center",flexWrap:"wrap"}}>
-        <button onClick={onSave} style={S.btn(GREEN,{padding:"10px 24px",fontSize:14})}>
-          💾 保存してレポートを見る
-        </button>
+        <button onClick={onSave} style={S.btn(GREEN,{padding:"10px 24px",fontSize:14})}>💾 保存してレポートを見る</button>
         <button onClick={onCancel} style={{background:"transparent",border:"1px solid #cdd5e0",padding:"10px 18px",borderRadius:7,cursor:"pointer",fontSize:13}}>キャンセル</button>
         {loading&&<span style={{fontSize:12,color:"#888"}}>処理中... しばらくお待ちください</span>}
       </div>
@@ -474,20 +404,15 @@ function FormView({data,upd,fTab,setFTab,maText,setMaText,upFile,setUpFile,fileR
   );
 }
 
-/* ── Tabs ── */
 function TabMaisoku({maText,setMaText,upFile,setUpFile,fileRef,onReadText,onReadFile,aiMsg,loading,onNext}){
   return(
     <div>
       <p style={{fontSize:13,color:"#555",marginBottom:16,lineHeight:1.7}}>
-        販売図面（マイソク）の情報をAIが自動読み取りします。<br/>
-        <strong>テキスト・画像（JPG/PNG）・PDF</strong>に対応。
+        販売図面（マイソク）の情報をAIが自動読み取りします。<strong>テキスト・画像（JPG/PNG）・PDF</strong>に対応。
       </p>
       <div style={{border:"1px solid #e2e8f0",borderRadius:8,padding:16,marginBottom:14}}>
         <div style={{fontWeight:"bold",fontSize:13,color:NAVY,marginBottom:8}}>📝 テキスト貼り付け</div>
-        <p style={{fontSize:12,color:"#777",marginBottom:8}}>チラシ・HP・メールからコピーしたテキストを貼り付けてください。</p>
-        <textarea value={maText} onChange={e=>setMaText(e.target.value)}
-          placeholder="物件名、所在地、賃料、管理費など..."
-          style={{...S.inp(),height:140,resize:"vertical",fontSize:12}}/>
+        <textarea value={maText} onChange={e=>setMaText(e.target.value)} placeholder="チラシ・HP・メールからコピーしたテキストを貼り付けてください..." style={{...S.inp(),height:140,resize:"vertical",fontSize:12}}/>
         <div style={{display:"flex",gap:8,marginTop:8}}>
           <button onClick={onReadText} disabled={loading||!maText.trim()} style={S.btn(NAVY,{fontSize:12,opacity:loading||!maText.trim()?0.6:1})}>
             {loading&&<span className="spinner"/>}🤖 AI解析 → フォームに反映
@@ -497,21 +422,10 @@ function TabMaisoku({maText,setMaText,upFile,setUpFile,fileRef,onReadText,onRead
       </div>
       <div style={{border:"1px solid #e2e8f0",borderRadius:8,padding:16,marginBottom:14}}>
         <div style={{fontWeight:"bold",fontSize:13,color:NAVY,marginBottom:8}}>📎 画像・PDFアップロード</div>
-        <p style={{fontSize:12,color:"#777",marginBottom:8}}>販売図面の画像（JPG/PNG）またはPDFをアップロードしてください。</p>
-        <div
-          onClick={()=>fileRef.current?.click()}
-          onDragOver={e=>e.preventDefault()}
-          onDrop={e=>{e.preventDefault();const f=e.dataTransfer.files[0];if(f)setUpFile(f);}}
+        <div onClick={()=>fileRef.current?.click()} onDragOver={e=>e.preventDefault()} onDrop={e=>{e.preventDefault();const f=e.dataTransfer.files[0];if(f)setUpFile(f);}}
           style={{border:`2px dashed ${upFile?NAVY:"#cdd5e0"}`,borderRadius:7,padding:"24px 20px",textAlign:"center",cursor:"pointer",background:upFile?"#f0f4ff":"#fafafa",marginBottom:8}}>
           <div style={{fontSize:24,marginBottom:6}}>{upFile?"📄":"📂"}</div>
-          {upFile?(
-            <div>
-              <div style={{fontWeight:"bold",color:NAVY}}>{upFile.name}</div>
-              <div style={{fontSize:12,color:"#888"}}>{(upFile.size/1024).toFixed(0)} KB</div>
-            </div>
-          ):(
-            <div style={{color:"#888",fontSize:13}}>ドラッグ&ドロップ またはクリックして選択</div>
-          )}
+          {upFile?(<div><div style={{fontWeight:"bold",color:NAVY}}>{upFile.name}</div><div style={{fontSize:12,color:"#888"}}>{(upFile.size/1024).toFixed(0)} KB</div></div>):(<div style={{color:"#888",fontSize:13}}>ドラッグ&ドロップ またはクリックして選択</div>)}
         </div>
         <input ref={fileRef} type="file" accept="image/*,.pdf" style={{display:"none"}} onChange={e=>setUpFile(e.target.files[0])}/>
         <div style={{display:"flex",gap:8}}>
@@ -521,19 +435,15 @@ function TabMaisoku({maText,setMaText,upFile,setUpFile,fileRef,onReadText,onRead
           <button onClick={()=>setUpFile(null)} style={S.btn("#888",{fontSize:12,padding:"8px 14px"})}>🗑 クリア</button>
         </div>
       </div>
-      {aiMsg&&(
-        <div style={{padding:"10px 14px",background:aiMsg.startsWith("✅")?"#f0fff4":aiMsg.startsWith("❌")?"#fff0f0":"#fffbf0",borderLeft:`3px solid ${aiMsg.startsWith("✅")?GREEN:aiMsg.startsWith("❌")?RED:GOLD}`,borderRadius:4,fontSize:13,marginBottom:14,whiteSpace:"pre-wrap"}}>
-          {aiMsg}
-        </div>
-      )}
+      {aiMsg&&(<div style={{padding:"10px 14px",background:aiMsg.startsWith("✅")?"#f0fff4":aiMsg.startsWith("❌")?"#fff0f0":"#fffbf0",borderLeft:`3px solid ${aiMsg.startsWith("✅")?GREEN:aiMsg.startsWith("❌")?RED:GOLD}`,borderRadius:4,fontSize:13,marginBottom:14,whiteSpace:"pre-wrap"}}>{aiMsg}</div>)}
       <button onClick={onNext} style={S.btn(NAVY2,{fontSize:13})}>次へ：基本情報を入力 →</button>
     </div>
   );
 }
 
-function FRow({label:lbl,value,onChange,type="text",placeholder,half}){
+function FRow({label:lbl,value,onChange,type="text",placeholder}){
   return(
-    <div style={{gridColumn:half?"span 1":"span 1"}}>
+    <div>
       <label style={S.lbl()}>{lbl}</label>
       <input type={type} value={value??""} onChange={e=>onChange(e.target.value)} placeholder={placeholder} style={S.inp()}/>
     </div>
@@ -589,18 +499,17 @@ function TabFinancial({data,upd,cf,yl}){
         <FRow label="初期投資額（万円）" value={data.initialInvestment} onChange={v=>upd("initialInvestment",v)} type="number" placeholder="頭金＋諸費用"/>
       </div>
       <div style={{padding:"12px 16px",background:cf>=0?"#f0fff4":"#fff0f0",borderRadius:8,borderLeft:`4px solid ${cf>=0?GREEN:RED}`,marginBottom:16}}>
-        <div style={{fontSize:12,color:"#666",marginBottom:4}}>月間キャッシュフロー（賃料−管理費等−ローン）</div>
+        <div style={{fontSize:12,color:"#666",marginBottom:4}}>月間キャッシュフロー</div>
         <div style={{fontSize:22,fontWeight:"bold",color:cf>=0?GREEN:RED}}>{cf>=0?"+":""}{fmtY(cf)} / 月</div>
         {yl&&<div style={{fontSize:12,color:"#666",marginTop:4}}>表面利回り：{fmtP(yl)}</div>}
       </div>
       <div>
-        <div style={{fontWeight:"bold",fontSize:14,color:NAVY,marginBottom:10}}>📈 賃料推移設定（5年ごと・AIが自動設定）</div>
+        <div style={{fontWeight:"bold",fontSize:14,color:NAVY,marginBottom:10}}>📈 賃料推移設定（5年ごと）</div>
         <div style={{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:8}}>
           {["1〜5年目","6〜10年目","11〜15年目","16〜20年目","21〜25年目","26〜30年目"].map((lbl,i)=>(
             <div key={i}>
               <label style={S.lbl({fontSize:10})}>{lbl}</label>
-              <input type="number" value={data.rentPeriods[i]||""} onChange={e=>{const p=[...data.rentPeriods];p[i]=e.target.value;upd("rentPeriods",p);}}
-                style={S.inp({fontSize:12})} placeholder="円/月"/>
+              <input type="number" value={data.rentPeriods[i]||""} onChange={e=>{const p=[...data.rentPeriods];p[i]=e.target.value;upd("rentPeriods",p);}} style={S.inp({fontSize:12})} placeholder="円/月"/>
             </div>
           ))}
         </div>
@@ -614,10 +523,7 @@ function TabSale({data,upd}){
   const spM=data.salePrice?Math.round(Number(data.salePrice)/10000):"";
   const spH=data.salePriceHigh?Math.round(Number(data.salePriceHigh)/10000):"";
   const spL=data.salePriceLow?Math.round(Number(data.salePriceLow)/10000):"";
-  const scenarios=[
-    {label:"相場価格",price:Number(data.salePrice)||0,color:NAVY2},
-    {label:"チャレンジ価格",price:Number(data.salePriceHigh)||0,color:GOLD},
-  ].filter(s=>s.price>0);
+  const scenarios=[{label:"相場価格",price:Number(data.salePrice)||0,color:NAVY2},{label:"チャレンジ",price:Number(data.salePriceHigh)||0,color:GOLD}].filter(s=>s.price>0);
   return(
     <div>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:16}}>
@@ -628,27 +534,17 @@ function TabSale({data,upd}){
         <FRow label="一括返済手数料（円）" value={data.prepaymentFee} onChange={v=>upd("prepaymentFee",v)} type="number" placeholder="0"/>
         <FRow label="賃管解除費用（円）" value={data.cancellationFee} onChange={v=>upd("cancellationFee",v)} type="number" placeholder="0"/>
       </div>
-      {scenarios.length>0&&(
-        <div>
-          <div style={{fontWeight:"bold",fontSize:13,color:NAVY,marginBottom:10}}>📊 売却手残り試算（概算）</div>
-          {scenarios.map((s,i)=>{
-            const commission=(s.price*0.03+60000)*1.1;
-            const residual=(Number(data.loanBalance)||0)*10000;
-            const net=s.price-commission-(Number(data.notaryFee)||0)-(Number(data.prepaymentFee)||0)-residual;
-            return(
-              <div key={i} style={{padding:"10px 14px",background:"#f8fafc",borderRadius:7,marginBottom:8,borderLeft:`3px solid ${s.color}`}}>
-                <div style={{fontSize:12,fontWeight:"bold",color:s.color,marginBottom:4}}>{s.label}</div>
-                <div style={{display:"flex",gap:16,fontSize:12,flexWrap:"wrap"}}>
-                  <span>売却：{fmtM(s.price)}</span>
-                  <span>仲介：▲{fmtM(commission)}</span>
-                  <span>残債：▲{fmtM(residual)}</span>
-                  <strong style={{color:net>=0?GREEN:RED}}>手残：{net>=0?"+":""}{fmtM(net)}</strong>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+      {scenarios.map((s,i)=>{
+        const c=(s.price*0.03+60000)*1.1;const res=(Number(data.loanBalance)||0)*10000;
+        const net=s.price-c-(Number(data.notaryFee)||0)-(Number(data.prepaymentFee)||0)-res;
+        return(<div key={i} style={{padding:"10px 14px",background:"#f8fafc",borderRadius:7,marginBottom:8,borderLeft:`3px solid ${s.color}`}}>
+          <div style={{fontSize:12,fontWeight:"bold",color:s.color,marginBottom:4}}>{s.label}</div>
+          <div style={{display:"flex",gap:16,fontSize:12,flexWrap:"wrap"}}>
+            <span>売却：{fmtM(s.price)}</span><span>仲介：▲{fmtM(c)}</span><span>残債：▲{fmtM(res)}</span>
+            <strong style={{color:net>=0?GREEN:RED}}>手残：{net>=0?"+":""}{fmtM(net)}</strong>
+          </div>
+        </div>);
+      })}
     </div>
   );
 }
@@ -662,29 +558,21 @@ function TabAI({data,onGenReport,aiMsg,loading}){
         <p style={{fontSize:13,color:"#555",margin:"0 0 14px",lineHeight:1.7}}>
           基本情報・財務情報をもとにClaude AIが以下を自動生成します：<br/>
           ✅ 物件・エリアの市場分析　✅ アピールポイント・懸念事項<br/>
-          ✅ 賃料推移予測（30年分）　✅ 適正売却価格試算　✅ 節税CF分析
+          ✅ 賃料推移予測　✅ 適正売却価格試算　✅ 節税CF分析
         </p>
         <button onClick={onGenReport} disabled={loading} style={S.btn(NAVY,{padding:"11px 24px",fontSize:14,opacity:loading?.7:1})}>
           {loading?<><span className="spinner"/>AIが分析中...</>:"🚀 AIレポートを生成する"}
         </button>
         {r&&<span style={{marginLeft:12,fontSize:12,color:GREEN}}>✅ 生成済み（{fmtD(data.updatedAt)}）</span>}
       </div>
-      {aiMsg&&(
-        <div style={{padding:"10px 14px",background:aiMsg.startsWith("✅")?"#f0fff4":aiMsg.startsWith("❌")?"#fff0f0":"#fffbf0",borderLeft:`3px solid ${aiMsg.startsWith("✅")?GREEN:aiMsg.startsWith("❌")?RED:GOLD}`,borderRadius:4,fontSize:13,marginBottom:14,whiteSpace:"pre-wrap"}}>
-          {aiMsg}
+      {aiMsg&&(<div style={{padding:"10px 14px",background:aiMsg.startsWith("✅")?"#f0fff4":aiMsg.startsWith("❌")?"#fff0f0":"#fffbf0",borderLeft:`3px solid ${aiMsg.startsWith("✅")?GREEN:aiMsg.startsWith("❌")?RED:GOLD}`,borderRadius:4,fontSize:13,marginBottom:14,whiteSpace:"pre-wrap"}}>{aiMsg}</div>)}
+      {r&&(<div>
+        <div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap"}}>
+          <span style={S.badge(r.cfRating==="◎良好"?GREEN:r.cfRating==="△要注意"?RED:"#e07b00")}>CF：{r.cfRating}</span>
+          <span style={S.badge(r.saleRating==="◎今が売り時"?GREEN:r.saleRating==="△今は保有"?RED:GOLD)}>売却：{r.saleRating}</span>
         </div>
-      )}
-      {r&&(
-        <div>
-          <div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap"}}>
-            <span style={S.badge(r.cfRating==="◎良好"?GREEN:r.cfRating==="△要注意"?RED:"#e07b00")}>CF：{r.cfRating}</span>
-            <span style={S.badge(r.saleRating==="◎今が売り時"?GREEN:r.saleRating==="△今は保有"?RED:GOLD)}>売却：{r.saleRating}</span>
-          </div>
-          <div style={{fontSize:13,color:"#333",lineHeight:1.8,background:"#f8fafc",padding:14,borderRadius:8}}>
-            <strong>総合評価：</strong><br/>{r.overallJudgment}
-          </div>
-        </div>
-      )}
+        <div style={{fontSize:13,color:"#333",lineHeight:1.8,background:"#f8fafc",padding:14,borderRadius:8}}><strong>総合評価：</strong><br/>{r.overallJudgment}</div>
+      </div>)}
     </div>
   );
 }
@@ -693,9 +581,7 @@ function TabAI({data,onGenReport,aiMsg,loading}){
    REPORT VIEW
 ════════════════════════════════════════════ */
 function ReportView({prop:p,onEdit,onBack}){
-  const r=p.aiReport;
-  const cf=getCF(p);
-  const yl=getYld(p);
+  const r=p.aiReport;const cf=getCF(p);const yl=getYld(p);
   const annualRent=(Number(p.rent)||0)*12;
   const annualMgmt=((Number(p.managementFee)||0)+(Number(p.repairFund)||0))*12;
   const annualLoan=(Number(p.loanPayment)||0)*12;
@@ -705,256 +591,148 @@ function ReportView({prop:p,onEdit,onBack}){
   const taxR=(Number(p.taxRate)||30)/100;
   const realEstate=annualRent-annualMgmt-annualInterest-annualTax-annualDepr;
   const taxBurden=realEstate*taxR;
-
-  const saleScenarios=[
-    {label:"保守的",price:Number(p.salePriceLow)||0,color:"#888"},
-    {label:"相場",price:Number(p.salePrice)||0,color:NAVY2},
-    {label:"チャレンジ",price:Number(p.salePriceHigh)||0,color:GOLD},
-  ].filter(s=>s.price>0).map(s=>{
-    const c=(s.price*0.03+60000)*1.1;
-    const res=(Number(p.loanBalance)||0)*10000;
+  const saleScenarios=[{label:"保守的",price:Number(p.salePriceLow)||0,color:"#888"},{label:"相場",price:Number(p.salePrice)||0,color:NAVY2},{label:"チャレンジ",price:Number(p.salePriceHigh)||0,color:GOLD}].filter(s=>s.price>0).map(s=>{
+    const c=(s.price*0.03+60000)*1.1;const res=(Number(p.loanBalance)||0)*10000;
     const net=s.price-c-(Number(p.notaryFee)||50000)-(Number(p.prepaymentFee)||0)-(Number(p.cancellationFee)||0)-res;
     return{...s,commission:c,residual:res,net};
   });
-
-  const TRow=({lbl,v,bold,color})=>(
-    <tr style={{borderBottom:"1px solid #f5f5f5"}}>
-      <td style={{padding:"6px 10px",fontSize:12,color:"#555"}}>{lbl}</td>
-      <td style={{padding:"6px 10px",fontSize:12,fontWeight:bold?"bold":"normal",color:color||"#333",textAlign:"right"}}>{v}</td>
-    </tr>
-  );
+  const TRow=({lbl,v,bold,color})=>(<tr style={{borderBottom:"1px solid #f5f5f5"}}><td style={{padding:"6px 10px",fontSize:12,color:"#555"}}>{lbl}</td><td style={{padding:"6px 10px",fontSize:12,fontWeight:bold?"bold":"normal",color:color||"#333",textAlign:"right"}}>{v}</td></tr>);
 
   return(
     <div>
-      {/* Header */}
       <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14,flexWrap:"wrap"}}>
         <button onClick={onBack} style={{background:"transparent",border:"1px solid #cdd5e0",padding:"6px 12px",borderRadius:6,cursor:"pointer",fontSize:13}}>← 一覧</button>
         <h2 style={{margin:0,fontSize:17,color:NAVY,fontWeight:"bold",flex:1,minWidth:0}}>{p.name}</h2>
-        {r&&<>
-          <span style={S.badge(r.cfRating==="◎良好"?GREEN:r.cfRating==="△要注意"?RED:"#e07b00")}>CF：{r.cfRating}</span>
-          <span style={S.badge(r.saleRating==="◎今が売り時"?GREEN:r.saleRating==="△今は保有"?RED:GOLD)}>売却：{r.saleRating}</span>
-        </>}
+        {r&&<><span style={S.badge(r.cfRating==="◎良好"?GREEN:r.cfRating==="△要注意"?RED:"#e07b00")}>CF：{r.cfRating}</span><span style={S.badge(r.saleRating==="◎今が売り時"?GREEN:r.saleRating==="△今は保有"?RED:GOLD)}>売却：{r.saleRating}</span></>}
         <button onClick={onEdit} style={S.btn(NAVY,{padding:"7px 16px",fontSize:12})}>✏️ 編集</button>
       </div>
       <div style={{fontSize:11,color:"#aaa",marginBottom:14}}>最終更新：{fmtD(p.updatedAt)} ／ {r?"🤖 AI分析済み":"AI分析未実施"}</div>
 
-      {/* Basic + Financial */}
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:14}}>
         <div style={S.card()}>
           <div style={{fontWeight:"bold",fontSize:14,color:NAVY,marginBottom:10}}>🏢 物件基本情報</div>
           <table style={{width:"100%",borderCollapse:"collapse"}}>
             <tbody>
-              {[["所在地",p.address],["最寄駅",p.station],["構造・築年月",`${p.structure||"−"} / ${p.builtDate||"−"}`],
-                ["専有面積",p.area?`${p.area}㎡`:"−"],["階数",p.floor||"−"],["総戸数",p.totalUnits||"−"],
-                ["現況",p.currentStatus||"−"],["管理会社",p.managementCompany||"−"],["サブリース",p.sublease||"なし"]
-              ].map(([l,v])=><TRow key={l} lbl={l} v={v||"−"}/>)}
+              {[["所在地",p.address],["最寄駅",p.station],["構造・築年月",`${p.structure||"−"} / ${p.builtDate||"−"}`],["専有面積",p.area?`${p.area}㎡`:"−"],["階数",p.floor||"−"],["総戸数",p.totalUnits||"−"],["現況",p.currentStatus||"−"],["管理会社",p.managementCompany||"−"],["サブリース",p.sublease||"なし"]].map(([l,v])=><TRow key={l} lbl={l} v={v||"−"}/>)}
             </tbody>
           </table>
         </div>
         <div style={S.card()}>
           <div style={{fontWeight:"bold",fontSize:14,color:NAVY,marginBottom:10}}>💹 財務サマリー</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:7,marginBottom:12}}>
-            {[
-              {l:"月間CF",v:`${cf>=0?"+":""}${fmtY(cf)}`,c:cf>=0?GREEN:RED},
-              {l:"月額賃料",v:fmtY(p.rent),c:"#333"},
-              {l:"管理費+修繕",v:fmtY((Number(p.managementFee)||0)+(Number(p.repairFund)||0)),c:"#333"},
-              {l:"ローン返済",v:fmtY(p.loanPayment),c:"#333"},
-              {l:"ローン残債",v:p.loanBalance?p.loanBalance+"万円":"−",c:"#555"},
-              {l:"表面利回り",v:yl?yl.toFixed(2)+"%":"−",c:yl&&yl>=5?GREEN:"#e07b00"},
-            ].map(m=>(
+            {[{l:"月間CF",v:`${cf>=0?"+":""}${fmtY(cf)}`,c:cf>=0?GREEN:RED},{l:"月額賃料",v:fmtY(p.rent),c:"#333"},{l:"管理費+修繕",v:fmtY((Number(p.managementFee)||0)+(Number(p.repairFund)||0)),c:"#333"},{l:"ローン返済",v:fmtY(p.loanPayment),c:"#333"},{l:"ローン残債",v:p.loanBalance?p.loanBalance+"万円":"−",c:"#555"},{l:"表面利回り",v:yl?yl.toFixed(2)+"%":"−",c:yl&&yl>=5?GREEN:"#e07b00"}].map(m=>(
               <div key={m.l} style={{background:"#f8fafc",borderRadius:6,padding:"7px 9px",textAlign:"center"}}>
                 <div style={{fontSize:10,color:"#888",marginBottom:2}}>{m.l}</div>
                 <div style={{fontSize:13,fontWeight:"bold",color:m.c}}>{m.v}</div>
               </div>
             ))}
           </div>
-          {p.askingPrice&&<div style={{padding:"7px 12px",background:"#f0f4ff",borderRadius:6,fontSize:12}}>
-            <strong>希望販売価格：</strong>{p.askingPrice}万円
-          </div>}
+          {p.askingPrice&&<div style={{padding:"7px 12px",background:"#f0f4ff",borderRadius:6,fontSize:12}}><strong>希望販売価格：</strong>{p.askingPrice}万円</div>}
         </div>
       </div>
 
-      {/* AI Report */}
-      {r?(
-        <>
-          <div style={{...S.card(),marginBottom:14}}>
-            <div style={{fontWeight:"bold",fontSize:14,color:NAVY,marginBottom:10}}>📊 市場分析・物件の立ち位置（AI調査）</div>
-            <div style={{fontSize:13,color:"#333",lineHeight:1.8,whiteSpace:"pre-wrap"}}>{r.marketSummary}</div>
-          </div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:14}}>
-            <div style={S.card()}>
-              <div style={{fontWeight:"bold",fontSize:13,color:GREEN,marginBottom:8}}>✅ アピールポイント</div>
-              {(r.positivePoints||[]).map((pt,i)=>(
-                <div key={i} style={{fontSize:12,color:"#333",padding:"5px 0",borderBottom:"1px solid #f5f5f5",lineHeight:1.6}}>● {pt}</div>
-              ))}
-              <div style={{fontWeight:"bold",fontSize:13,color:NAVY2,margin:"12px 0 6px"}}>🚇 駅・エリア（プラス）</div>
-              {(r.stationPositive||[]).map((pt,i)=>(
-                <div key={i} style={{fontSize:11,color:"#444",padding:"3px 0",lineHeight:1.5}}>✅ {pt}</div>
-              ))}
-            </div>
-            <div style={S.card()}>
-              <div style={{fontWeight:"bold",fontSize:13,color:RED,marginBottom:8}}>⚠️ 懸念事項</div>
-              {(r.negativePoints||[]).map((pt,i)=>(
-                <div key={i} style={{fontSize:12,color:"#333",padding:"5px 0",borderBottom:"1px solid #f5f5f5",lineHeight:1.6}}>▲ {pt}</div>
-              ))}
-              <div style={{fontWeight:"bold",fontSize:13,color:NAVY2,margin:"12px 0 6px"}}>🚇 駅・エリア（マイナス）</div>
-              {(r.stationNegative||[]).map((pt,i)=>(
-                <div key={i} style={{fontSize:11,color:"#666",padding:"3px 0",lineHeight:1.5}}>⚠️ {pt}</div>
-              ))}
-            </div>
-          </div>
-          <div style={{...S.card(),marginBottom:14,borderLeft:`4px solid ${NAVY}`}}>
-            <div style={{fontWeight:"bold",fontSize:14,color:NAVY,marginBottom:8}}>📋 総合評価（AI分析）</div>
-            <div style={{fontSize:13,color:"#333",lineHeight:1.8,marginBottom:12,whiteSpace:"pre-wrap"}}>{r.overallJudgment}</div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-              <div style={{padding:"10px 12px",background:"#f0fff4",borderRadius:6,borderLeft:`3px solid ${GREEN}`}}>
-                <div style={{fontSize:11,fontWeight:"bold",color:GREEN,marginBottom:4}}>保有継続の場合</div>
-                <div style={{fontSize:12,color:"#333",lineHeight:1.6}}>{r.holdAdvice}</div>
-              </div>
-              <div style={{padding:"10px 12px",background:"#fff8f0",borderRadius:6,borderLeft:`3px solid ${GOLD}`}}>
-                <div style={{fontSize:11,fontWeight:"bold",color:GOLD,marginBottom:4}}>売却を検討する場合</div>
-                <div style={{fontSize:12,color:"#333",lineHeight:1.6}}>{r.saleAdvice}</div>
-              </div>
-            </div>
-          </div>
-        </>
-      ):(
-        <div style={{...S.card(),marginBottom:14,textAlign:"center",padding:40}}>
-          <div style={{fontSize:32,marginBottom:12}}>🤖</div>
-          <div style={{fontSize:15,color:"#555",marginBottom:8}}>AI分析レポートが未生成です</div>
-          <div style={{fontSize:12,color:"#888",marginBottom:16}}>物件情報を入力してAIレポートを生成すると、詳細な分析が表示されます</div>
-          <button onClick={onEdit} style={S.btn(NAVY)}>✏️ 編集してAIレポートを生成</button>
+      {r?(<>
+        <div style={{...S.card(),marginBottom:14}}>
+          <div style={{fontWeight:"bold",fontSize:14,color:NAVY,marginBottom:10}}>📊 市場分析（AI調査）</div>
+          <div style={{fontSize:13,color:"#333",lineHeight:1.8,whiteSpace:"pre-wrap"}}>{r.marketSummary}</div>
         </div>
-      )}
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:14}}>
+          <div style={S.card()}>
+            <div style={{fontWeight:"bold",fontSize:13,color:GREEN,marginBottom:8}}>✅ アピールポイント</div>
+            {(r.positivePoints||[]).map((pt,i)=>(<div key={i} style={{fontSize:12,color:"#333",padding:"5px 0",borderBottom:"1px solid #f5f5f5",lineHeight:1.6}}>● {pt}</div>))}
+            <div style={{fontWeight:"bold",fontSize:13,color:NAVY2,margin:"12px 0 6px"}}>🚇 駅・エリア（プラス）</div>
+            {(r.stationPositive||[]).map((pt,i)=>(<div key={i} style={{fontSize:11,color:"#444",padding:"3px 0",lineHeight:1.5}}>✅ {pt}</div>))}
+          </div>
+          <div style={S.card()}>
+            <div style={{fontWeight:"bold",fontSize:13,color:RED,marginBottom:8}}>⚠️ 懸念事項</div>
+            {(r.negativePoints||[]).map((pt,i)=>(<div key={i} style={{fontSize:12,color:"#333",padding:"5px 0",borderBottom:"1px solid #f5f5f5",lineHeight:1.6}}>▲ {pt}</div>))}
+            <div style={{fontWeight:"bold",fontSize:13,color:NAVY2,margin:"12px 0 6px"}}>🚇 駅・エリア（マイナス）</div>
+            {(r.stationNegative||[]).map((pt,i)=>(<div key={i} style={{fontSize:11,color:"#666",padding:"3px 0",lineHeight:1.5}}>⚠️ {pt}</div>))}
+          </div>
+        </div>
+        <div style={{...S.card(),marginBottom:14,borderLeft:`4px solid ${NAVY}`}}>
+          <div style={{fontWeight:"bold",fontSize:14,color:NAVY,marginBottom:8}}>📋 総合評価（AI分析）</div>
+          <div style={{fontSize:13,color:"#333",lineHeight:1.8,marginBottom:12,whiteSpace:"pre-wrap"}}>{r.overallJudgment}</div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+            <div style={{padding:"10px 12px",background:"#f0fff4",borderRadius:6,borderLeft:`3px solid ${GREEN}`}}>
+              <div style={{fontSize:11,fontWeight:"bold",color:GREEN,marginBottom:4}}>保有継続の場合</div>
+              <div style={{fontSize:12,color:"#333",lineHeight:1.6}}>{r.holdAdvice}</div>
+            </div>
+            <div style={{padding:"10px 12px",background:"#fff8f0",borderRadius:6,borderLeft:`3px solid ${GOLD}`}}>
+              <div style={{fontSize:11,fontWeight:"bold",color:GOLD,marginBottom:4}}>売却を検討する場合</div>
+              <div style={{fontSize:12,color:"#333",lineHeight:1.6}}>{r.saleAdvice}</div>
+            </div>
+          </div>
+        </div>
+      </>):(<div style={{...S.card(),marginBottom:14,textAlign:"center",padding:40}}>
+        <div style={{fontSize:32,marginBottom:12}}>🤖</div>
+        <div style={{fontSize:15,color:"#555",marginBottom:8}}>AI分析レポートが未生成です</div>
+        <div style={{fontSize:12,color:"#888",marginBottom:16}}>物件情報を入力してAIレポートを生成すると詳細な分析が表示されます</div>
+        <button onClick={onEdit} style={S.btn(NAVY)}>✏️ 編集してAIレポートを生成</button>
+      </div>)}
 
-      {/* CF Analysis */}
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:14}}>
         <div style={S.card()}>
           <div style={{fontWeight:"bold",fontSize:14,color:NAVY,marginBottom:10}}>💰 節税効果の試算</div>
-          <table style={{width:"100%",borderCollapse:"collapse"}}>
-            <tbody>
-              <TRow lbl="年間賃料収入" v={fmtY(annualRent)}/>
-              <TRow lbl="管理費・修繕積立" v={`▲${fmtY(annualMgmt)}`} color={RED}/>
-              <TRow lbl="ローン利息（年間）" v={`▲${fmtY(annualInterest)}`} color={RED}/>
-              <TRow lbl="固定資産税" v={`▲${fmtY(annualTax)}`} color={RED}/>
-              <TRow lbl="減価償却費" v={`▲${fmtY(annualDepr)}`} color={RED}/>
-              <TRow lbl="不動産所得" v={fmtY(realEstate)} bold color={realEstate>=0?RED:GREEN}/>
-              {realEstate>=0
-                ?<TRow lbl={`所得税・住民税（${p.taxRate}%）`} v={`▲${fmtY(taxBurden)}`} bold color={RED}/>
-                :<TRow lbl={`節税額（${p.taxRate}%）`} v={`+${fmtY(-taxBurden)}`} bold color={GREEN}/>
-              }
-            </tbody>
-          </table>
+          <table style={{width:"100%",borderCollapse:"collapse"}}><tbody>
+            <TRow lbl="年間賃料収入" v={fmtY(annualRent)}/>
+            <TRow lbl="管理費・修繕積立" v={`▲${fmtY(annualMgmt)}`} color={RED}/>
+            <TRow lbl="ローン利息（年間）" v={`▲${fmtY(annualInterest)}`} color={RED}/>
+            <TRow lbl="固定資産税" v={`▲${fmtY(annualTax)}`} color={RED}/>
+            <TRow lbl="減価償却費" v={`▲${fmtY(annualDepr)}`} color={RED}/>
+            <TRow lbl="不動産所得" v={fmtY(realEstate)} bold color={realEstate>=0?RED:GREEN}/>
+            {realEstate>=0?<TRow lbl={`所得税・住民税（${p.taxRate}%）`} v={`▲${fmtY(taxBurden)}`} bold color={RED}/>:<TRow lbl={`節税額（${p.taxRate}%）`} v={`+${fmtY(-taxBurden)}`} bold color={GREEN}/>}
+          </tbody></table>
         </div>
         <div style={S.card()}>
           <div style={{fontWeight:"bold",fontSize:14,color:NAVY,marginBottom:10}}>📈 年間キャッシュフロー</div>
-          <table style={{width:"100%",borderCollapse:"collapse"}}>
-            <tbody>
-              <TRow lbl="年間賃料収入" v={fmtY(annualRent)}/>
-              <TRow lbl="管理費・修繕積立" v={`▲${fmtY(annualMgmt)}`} color={RED}/>
-              <TRow lbl="ローン返済（年間）" v={`▲${fmtY(annualLoan)}`} color={RED}/>
-              <TRow lbl="固定資産税" v={`▲${fmtY(annualTax)}`} color={RED}/>
-              <TRow lbl="年間CF" v={`${cf*12>=0?"+":""}${fmtY(cf*12)}`} bold color={cf>=0?GREEN:RED}/>
-              <TRow lbl="月換算" v={`${cf>=0?"+":""}${fmtY(cf)}`} bold color={cf>=0?GREEN:RED}/>
-            </tbody>
-          </table>
+          <table style={{width:"100%",borderCollapse:"collapse"}}><tbody>
+            <TRow lbl="年間賃料収入" v={fmtY(annualRent)}/>
+            <TRow lbl="管理費・修繕積立" v={`▲${fmtY(annualMgmt)}`} color={RED}/>
+            <TRow lbl="ローン返済（年間）" v={`▲${fmtY(annualLoan)}`} color={RED}/>
+            <TRow lbl="固定資産税" v={`▲${fmtY(annualTax)}`} color={RED}/>
+            <TRow lbl="年間CF" v={`${cf*12>=0?"+":""}${fmtY(cf*12)}`} bold color={cf>=0?GREEN:RED}/>
+            <TRow lbl="月換算" v={`${cf>=0?"+":""}${fmtY(cf)}`} bold color={cf>=0?GREEN:RED}/>
+          </tbody></table>
         </div>
       </div>
 
-      {/* Rent Trend */}
-      {p.rentPeriods?.some(v=>v)&&(
-        <div style={{...S.card(),marginBottom:14}}>
-          <div style={{fontWeight:"bold",fontSize:14,color:NAVY,marginBottom:10}}>
-            📉 賃料推移シミュレーション（5年ごと）
-            {r?.rentTrend?.note&&<span style={{fontSize:11,color:"#888",fontWeight:"normal",marginLeft:8}}>{r.rentTrend.note}</span>}
-          </div>
-          <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-            {["1〜5年目","6〜10年目","11〜15年目","16〜20年目","21〜25年目","26〜30年目"].map((lbl,i)=>{
-              const v=p.rentPeriods[i];
-              const base=Number(p.rent)||1;
-              const pct=v?((Number(v)-base)/base*100).toFixed(1):null;
-              return(
-                <div key={i} style={{flex:"1 1 90px",background:"#f8fafc",borderRadius:6,padding:"8px 10px",textAlign:"center"}}>
-                  <div style={{fontSize:10,color:"#888",marginBottom:2}}>{lbl}</div>
-                  <div style={{fontSize:13,fontWeight:"bold",color:NAVY}}>{v?fmtY(v):"−"}</div>
-                  {pct&&i>0&&<div style={{fontSize:11,color:Number(pct)>=0?GREEN:RED}}>{Number(pct)>0?"+":""}{pct}%</div>}
-                </div>
-              );
-            })}
-          </div>
+      {p.rentPeriods?.some(v=>v)&&(<div style={{...S.card(),marginBottom:14}}>
+        <div style={{fontWeight:"bold",fontSize:14,color:NAVY,marginBottom:10}}>📉 賃料推移シミュレーション</div>
+        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+          {["1〜5年目","6〜10年目","11〜15年目","16〜20年目","21〜25年目","26〜30年目"].map((lbl,i)=>{
+            const v=p.rentPeriods[i];const base=Number(p.rent)||1;const pct=v?((Number(v)-base)/base*100).toFixed(1):null;
+            return(<div key={i} style={{flex:"1 1 90px",background:"#f8fafc",borderRadius:6,padding:"8px 10px",textAlign:"center"}}>
+              <div style={{fontSize:10,color:"#888",marginBottom:2}}>{lbl}</div>
+              <div style={{fontSize:13,fontWeight:"bold",color:NAVY}}>{v?fmtY(v):"−"}</div>
+              {pct&&i>0&&<div style={{fontSize:11,color:Number(pct)>=0?GREEN:RED}}>{Number(pct)>0?"+":""}{pct}%</div>}
+            </div>);
+          })}
         </div>
-      )}
+      </div>)}
 
-      {/* Sale Scenarios */}
-      {saleScenarios.length>0&&(
-        <div style={{...S.card(),marginBottom:14}}>
-          <div style={{fontWeight:"bold",fontSize:14,color:NAVY,marginBottom:10}}>
-            🏷️ 売却シナリオ試算
-            {r?.saleScenario?.note&&<span style={{fontSize:11,color:"#888",fontWeight:"normal",marginLeft:8}}>{r.saleScenario.note}</span>}
-          </div>
-          <div style={{display:"grid",gridTemplateColumns:`repeat(${saleScenarios.length},1fr)`,gap:10}}>
-            {saleScenarios.map((s,i)=>(
-              <div key={i} style={{border:`2px solid ${s.color}20`,borderTop:`3px solid ${s.color}`,borderRadius:8,padding:12,background:`${s.color}08`}}>
-                <div style={{fontSize:12,fontWeight:"bold",color:s.color,marginBottom:6}}>{s.label}シナリオ</div>
-                <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
-                  <tbody>
-                    {[["売却価格",fmtM(s.price)],["仲介手数料",`▲${fmtM(s.commission)}`],["ローン返済",`▲${fmtM(s.residual)}`],["諸費用",`▲${fmtM(s.notary+s.prepay+s.cancel)}`]].map(([l,v])=>(
-                      <tr key={l}><td style={{padding:"3px 0",color:"#666"}}>{l}</td><td style={{textAlign:"right"}}>{v}</td></tr>
-                    ))}
-                    <tr style={{borderTop:`1px solid ${s.color}40`}}>
-                      <td style={{padding:"5px 0",fontWeight:"bold"}}>手残り</td>
-                      <td style={{textAlign:"right",fontWeight:"bold",color:s.net>=0?GREEN:RED,fontSize:14}}>
-                        {s.net>=0?"+":""}{fmtM(s.net)}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            ))}
-          </div>
+      {saleScenarios.length>0&&(<div style={{...S.card(),marginBottom:14}}>
+        <div style={{fontWeight:"bold",fontSize:14,color:NAVY,marginBottom:10}}>🏷️ 売却シナリオ試算</div>
+        <div style={{display:"grid",gridTemplateColumns:`repeat(${saleScenarios.length},1fr)`,gap:10}}>
+          {saleScenarios.map((s,i)=>(<div key={i} style={{border:`2px solid ${s.color}20`,borderTop:`3px solid ${s.color}`,borderRadius:8,padding:12,background:`${s.color}08`}}>
+            <div style={{fontSize:12,fontWeight:"bold",color:s.color,marginBottom:6}}>{s.label}シナリオ</div>
+            <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}><tbody>
+              {[["売却価格",fmtM(s.price)],["仲介手数料",`▲${fmtM(s.commission)}`],["ローン返済",`▲${fmtM(s.residual)}`],["諸費用",`▲${fmtM(s.notary+s.prepay+s.cancel)}`]].map(([l,v])=>(<tr key={l}><td style={{padding:"3px 0",color:"#666"}}>{l}</td><td style={{textAlign:"right"}}>{v}</td></tr>))}
+              <tr style={{borderTop:`1px solid ${s.color}40`}}><td style={{padding:"5px 0",fontWeight:"bold"}}>手残り</td><td style={{textAlign:"right",fontWeight:"bold",color:s.net>=0?GREEN:RED,fontSize:14}}>{s.net>=0?"+":""}{fmtM(s.net)}</td></tr>
+            </tbody></table>
+          </div>))}
         </div>
-      )}
+      </div>)}
 
-      {p.notes&&(
-        <div style={{...S.card(),marginBottom:14}}>
-          <div style={{fontWeight:"bold",fontSize:13,color:NAVY,marginBottom:6}}>📝 備考・メモ</div>
-          <div style={{fontSize:12,color:"#444",lineHeight:1.7,whiteSpace:"pre-wrap"}}>{p.notes}</div>
-        </div>
-      )}
+      {p.notes&&(<div style={{...S.card(),marginBottom:14}}>
+        <div style={{fontWeight:"bold",fontSize:13,color:NAVY,marginBottom:6}}>📝 備考・メモ</div>
+        <div style={{fontSize:12,color:"#444",lineHeight:1.7,whiteSpace:"pre-wrap"}}>{p.notes}</div>
+      </div>)}
       <div style={{fontSize:10,color:"#ccc",textAlign:"right",marginTop:4}}>本ツールの計算結果はあくまで参考値です。実際の投資判断は専門家にご相談ください。</div>
     </div>
   );
 }
 
-/* ════════════════════════════════════════════
-   API MODAL
-════════════════════════════════════════════ */
-function ApiModal({cur,onSave,onClose}){
-  const [k,setK]=useState(cur||"");
-  return(
-    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:9999}}>
-      <div style={{background:"#fff",borderRadius:12,padding:28,width:440,maxWidth:"90vw",boxShadow:"0 8px 40px rgba(0,0,0,.2)"}}>
-        <h3 style={{margin:"0 0 8px",color:NAVY}}>⚙️ Anthropic API設定</h3>
-        <p style={{fontSize:13,color:"#666",marginBottom:16,lineHeight:1.7}}>
-          マイソク読み取りとAI調査レポート生成にはAnthropicのAPIキーが必要です。<br/>
-          <a href="https://console.anthropic.com" target="_blank" rel="noreferrer" style={{color:NAVY}}>console.anthropic.com</a> で取得できます。
-        </p>
-        <label style={S.lbl()}>APIキー（sk-ant-...）</label>
-        <input type="password" value={k} onChange={e=>setK(e.target.value)} placeholder="sk-ant-api03-..."
-          style={{...S.inp(),marginBottom:16,fontFamily:"monospace"}}/>
-        <div style={{display:"flex",gap:8}}>
-          <button onClick={()=>onSave(k)} style={S.btn(NAVY,{flex:1})}>保存</button>
-          <button onClick={onClose} style={{flex:1,background:"transparent",border:"1px solid #cdd5e0",padding:"9px 18px",borderRadius:7,cursor:"pointer",fontSize:13}}>キャンセル</button>
-        </div>
-        <p style={{fontSize:11,color:"#aaa",marginTop:12,marginBottom:0}}>
-          ※ APIキーはブラウザのlocalStorageに保存されます。第三者と共有しないでください。
-        </p>
-      </div>
-    </div>
-  );
-}
-
-/* ── RENDER ── */
 const root=ReactDOM.createRoot(document.getElementById("root"));
 root.render(<App/>);
 </script>
