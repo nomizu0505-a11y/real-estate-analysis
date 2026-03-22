@@ -1,2461 +1,962 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>不動産投資分析レポート v9.0 — エスリード江坂垂水 707号室</title>
-<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>不動産投資分析レポート v10</title>
 <style>
-/* ===== RESET & BASE ===== */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { font-size: 14px; scroll-behavior: smooth; }
-body {
-  font-family: 'Helvetica Neue', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
-  background: #f0f2f5;
-  color: #1a1a2e;
-  line-height: 1.6;
-  min-height: 100vh;
-}
-
-/* ===== CSS VARIABLES ===== */
-:root {
-  --navy: #0d1b2a;
-  --navy-mid: #1b2a3b;
-  --navy-light: #243447;
-  --gold: #c9a84c;
-  --gold-light: #e8c97a;
-  --accent-blue: #3a86ff;
-  --accent-green: #06d6a0;
-  --accent-red: #ef476f;
-  --accent-orange: #ffa62b;
-  --white: #ffffff;
-  --gray-50: #f8f9fa;
-  --gray-100: #f0f2f5;
-  --gray-200: #e2e8f0;
-  --gray-300: #cbd5e1;
-  --gray-600: #64748b;
-  --gray-800: #1e293b;
-  --shadow-sm: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
-  --shadow-md: 0 4px 16px rgba(0,0,0,.10);
-  --shadow-lg: 0 8px 32px rgba(0,0,0,.14);
-  --radius: 12px;
-  --radius-sm: 8px;
-}
-
-/* ===== HEADER ===== */
-.site-header {
-  background: linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 100%);
-  color: var(--white);
-  padding: 0 24px;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  box-shadow: 0 2px 16px rgba(0,0,0,.3);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 60px;
-}
-.header-brand { display: flex; align-items: center; gap: 12px; }
-.header-brand-icon {
-  width: 36px; height: 36px;
-  background: linear-gradient(135deg, var(--gold), var(--gold-light));
-  border-radius: 8px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 18px; font-weight: 900; color: var(--navy);
-}
-.header-brand-text h1 { font-size: 1.05rem; font-weight: 700; letter-spacing: .02em; }
-.header-brand-text p { font-size: .72rem; color: rgba(255,255,255,.55); margin-top: 1px; }
-.header-actions { display: flex; align-items: center; gap: 8px; }
-.btn-header {
-  padding: 6px 14px; border-radius: 20px; border: none; cursor: pointer;
-  font-size: .78rem; font-weight: 600; transition: all .2s;
-}
-.btn-header-outline {
-  background: transparent; border: 1.5px solid rgba(255,255,255,.35); color: rgba(255,255,255,.85);
-}
-.btn-header-outline:hover { border-color: var(--gold); color: var(--gold); }
-.btn-header-primary {
-  background: linear-gradient(135deg, var(--gold), var(--gold-light));
-  color: var(--navy); font-weight: 700;
-}
-.btn-header-primary:hover { opacity: .9; transform: translateY(-1px); }
-
-/* ===== TAB NAVIGATION ===== */
-.tab-nav {
-  background: var(--white);
-  border-bottom: 1px solid var(--gray-200);
-  position: sticky; top: 60px; z-index: 90;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.tab-nav::-webkit-scrollbar { display: none; }
-.tab-nav-inner {
-  display: flex; min-width: max-content;
-  padding: 0 16px;
-}
-.tab-btn {
-  padding: 14px 18px;
-  border: none; background: transparent; cursor: pointer;
-  font-size: .82rem; font-weight: 600; color: var(--gray-600);
-  border-bottom: 3px solid transparent;
-  transition: all .2s; white-space: nowrap;
-}
-.tab-btn:hover { color: var(--navy); }
-.tab-btn.active { color: var(--navy); border-bottom-color: var(--gold); }
-
-/* ===== MAIN CONTENT ===== */
-.main-content { max-width: 1200px; margin: 0 auto; padding: 24px 16px; }
-.tab-panel { display: none; }
-.tab-panel.active { display: block; }
-
-/* ===== SECTION TITLE ===== */
-.section-title {
-  font-size: 1.1rem; font-weight: 700; color: var(--navy);
-  border-left: 4px solid var(--gold);
-  padding-left: 12px; margin-bottom: 16px;
-}
-.section-subtitle {
-  font-size: .82rem; color: var(--gray-600); margin-top: 3px;
-}
-
-/* ===== CARD ===== */
-.card {
-  background: var(--white); border-radius: var(--radius);
-  box-shadow: var(--shadow-sm); padding: 20px;
-  margin-bottom: 20px;
-  border: 1px solid var(--gray-200);
-}
-.card-title {
-  font-size: .88rem; font-weight: 700; color: var(--navy-mid);
-  margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
-}
-
-/* ===== REAL COST HERO ===== */
-.real-cost-hero {
-  background: linear-gradient(135deg, var(--navy) 0%, #16213e 100%);
-  border-radius: var(--radius);
-  padding: 28px 32px;
-  margin-bottom: 24px;
-  box-shadow: var(--shadow-lg);
-  border: 1px solid rgba(201,168,76,.25);
-  text-align: center;
-}
-.real-cost-hero-label {
-  font-size: .78rem; color: rgba(255,255,255,.55);
-  letter-spacing: .12em; text-transform: uppercase;
-  margin-bottom: 8px;
-}
-.real-cost-hero-value {
-  font-size: 3.2rem; font-weight: 900; line-height: 1;
-  margin-bottom: 6px;
-}
-.real-cost-hero-value.negative { color: #ff6b6b; }
-.real-cost-hero-value.positive { color: var(--accent-green); }
-.real-cost-hero-sub {
-  font-size: 1.05rem; color: rgba(255,255,255,.65);
-  margin-bottom: 20px;
-}
-.real-cost-breakdown {
-  display: grid; grid-template-columns: repeat(3, 1fr);
-  gap: 1px; background: rgba(255,255,255,.1);
-  border-radius: 8px; overflow: hidden;
-  margin-top: 16px;
-}
-.real-cost-item {
-  background: rgba(255,255,255,.05);
-  padding: 12px 10px; text-align: center;
-}
-.real-cost-item-label { font-size: .68rem; color: rgba(255,255,255,.5); margin-bottom: 4px; }
-.real-cost-item-value { font-size: 1.05rem; font-weight: 800; }
-.real-cost-item-value.neg { color: #ff8a8a; }
-.real-cost-item-value.pos { color: #6ee7b7; }
-.real-cost-item-unit { font-size: .65rem; color: rgba(255,255,255,.4); margin-top: 2px; }
-
-/* ===== INFO GRID ===== */
-.info-grid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 10px; margin-bottom: 16px;
-}
-.info-item {
-  background: var(--gray-50); border-radius: var(--radius-sm);
-  padding: 12px 14px; border: 1px solid var(--gray-200);
-}
-.info-item-label { font-size: .72rem; color: var(--gray-600); margin-bottom: 4px; }
-.info-item-value { font-size: .92rem; font-weight: 700; color: var(--navy); }
-
-/* ===== FINANCE SUMMARY CARDS ===== */
-.finance-cards {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 10px; margin-bottom: 16px;
-}
-.finance-card {
-  border-radius: var(--radius-sm); padding: 14px;
-  text-align: center; border-top: 3px solid transparent;
-}
-.finance-card.income { background: #f0fdf4; border-top-color: var(--accent-green); }
-.finance-card.expense { background: #fff1f2; border-top-color: var(--accent-red); }
-.finance-card.cashflow-neg { background: #fff7ed; border-top-color: var(--accent-orange); }
-.finance-card.cashflow-pos { background: #f0fdf4; border-top-color: var(--accent-green); }
-.finance-card.neutral { background: #f8fafc; border-top-color: var(--accent-blue); }
-.finance-card-label { font-size: .72rem; color: var(--gray-600); margin-bottom: 6px; }
-.finance-card-value { font-size: 1.1rem; font-weight: 800; }
-.finance-card-value.green { color: #059669; }
-.finance-card-value.red { color: #dc2626; }
-.finance-card-value.orange { color: #d97706; }
-.finance-card-value.blue { color: #2563eb; }
-.finance-card-unit { font-size: .7rem; color: var(--gray-600); margin-top: 3px; }
-
-/* ===== TABLE ===== */
-.data-table {
-  width: 100%; border-collapse: collapse; font-size: .82rem;
-}
-.data-table th {
-  background: linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 100%);
-  color: var(--white); padding: 10px 12px; text-align: left;
-  font-weight: 600; font-size: .78rem;
-}
-.data-table th:first-child { border-radius: 6px 0 0 0; }
-.data-table th:last-child { border-radius: 0 6px 0 0; }
-.data-table td {
-  padding: 9px 12px; border-bottom: 1px solid var(--gray-200);
-  vertical-align: middle;
-}
-.data-table tr:hover td { background: var(--gray-50); }
-.data-table tr:last-child td { border-bottom: none; }
-.data-table .td-income { color: #059669; font-weight: 700; }
-.data-table .td-expense { color: #dc2626; }
-.data-table .td-negative { color: #dc2626; font-weight: 700; }
-.data-table .td-positive { color: #059669; font-weight: 700; }
-.data-table .td-warning { color: #d97706; font-weight: 700; }
-.data-table .td-total {
-  background: linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 100%);
-  color: var(--white); font-weight: 700;
-}
-.data-table .td-total-accent { color: var(--gold-light); font-weight: 800; }
-
-/* ===== FORMULA BOX ===== */
-.formula-box {
-  background: #f8fafc; border: 1px solid var(--gray-200);
-  border-left: 4px solid var(--accent-blue);
-  border-radius: var(--radius-sm); padding: 14px 16px;
-  margin: 12px 0; font-size: .8rem;
-}
-.formula-box-title { font-weight: 700; color: var(--navy); margin-bottom: 8px; font-size: .82rem; }
-.formula-line { color: var(--gray-800); margin: 3px 0; font-family: 'Courier New', monospace; }
-.formula-result { color: var(--accent-blue); font-weight: 700; margin-top: 6px; }
-
-/* ===== NOTICE BOX ===== */
-.notice-box {
-  border-radius: var(--radius-sm); padding: 12px 16px;
-  margin: 12px 0; font-size: .8rem; display: flex; gap: 10px;
-}
-.notice-box.info { background: #eff6ff; border: 1px solid #bfdbfe; color: #1d4ed8; }
-.notice-box.warning { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
-.notice-box.success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #065f46; }
-.notice-box.danger { background: #fff1f2; border: 1px solid #fecdd3; color: #9f1239; }
-.notice-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
-
-/* ===== APPEAL SECTION ===== */
-.appeal-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;
-}
-@media (max-width: 640px) { .appeal-grid { grid-template-columns: 1fr; } }
-.appeal-card {
-  border-radius: var(--radius-sm); padding: 16px;
-}
-.appeal-card.positive { background: #f0fdf4; border: 1px solid #bbf7d0; }
-.appeal-card.negative { background: #fff1f2; border: 1px solid #fecdd3; }
-.appeal-card-title {
-  font-size: .82rem; font-weight: 700; margin-bottom: 10px;
-  display: flex; align-items: center; gap: 6px;
-}
-.appeal-card.positive .appeal-card-title { color: #065f46; }
-.appeal-card.negative .appeal-card-title { color: #9f1239; }
-.appeal-item {
-  font-size: .78rem; padding: 5px 0; border-bottom: 1px solid rgba(0,0,0,.05);
-  display: flex; align-items: flex-start; gap: 6px; line-height: 1.5;
-}
-.appeal-item:last-child { border-bottom: none; }
-.appeal-item-dot { flex-shrink: 0; margin-top: 2px; font-size: .7rem; }
-
-/* ===== CASHFLOW STAGE ===== */
-.cf-stage {
-  border-radius: var(--radius); overflow: hidden;
-  margin-bottom: 16px; border: 1px solid var(--gray-200);
-}
-.cf-stage-header {
-  padding: 12px 16px; font-weight: 700; font-size: .88rem;
-  display: flex; align-items: center; gap: 10px;
-}
-.cf-stage-header.stage1 { background: linear-gradient(135deg, #1e3a5f, #2d5282); color: var(--white); }
-.cf-stage-header.stage2 { background: linear-gradient(135deg, #1a4731, #276749); color: var(--white); }
-.cf-stage-header.stage3 { background: linear-gradient(135deg, #7c2d12, #9a3412); color: var(--white); }
-.cf-stage-badge {
-  margin-left: auto; font-size: .68rem; font-weight: 600;
-  background: rgba(255,255,255,.2); padding: 2px 8px; border-radius: 10px;
-}
-.cf-stage-body { padding: 14px; }
-
-/* ===== COMBINED LAYOUT (2-col) ===== */
-.two-col-layout {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-  align-items: start;
-}
-@media (max-width: 900px) { .two-col-layout { grid-template-columns: 1fr; } }
-
-/* ===== SIM TABLE ===== */
-.sim-table {
-  width: 100%; border-collapse: collapse; font-size: .78rem;
-}
-.sim-table th {
-  background: linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 100%);
-  color: var(--white); padding: 9px 10px; text-align: right; font-size: .74rem;
-}
-.sim-table th:first-child { text-align: left; border-radius: 6px 0 0 0; }
-.sim-table th:last-child { border-radius: 0 6px 0 0; }
-.sim-table td {
-  padding: 7px 10px; border-bottom: 1px solid var(--gray-200);
-  text-align: right; vertical-align: middle;
-}
-.sim-table td:first-child { text-align: left; font-weight: 600; }
-.sim-table tr.completed { background: #f0fdf4; }
-.sim-table tr.completed td { border-top: 2px solid var(--accent-green); }
-.sim-table tr.milestone td { background: #fefce8; }
-.sim-table .td-pos { color: #059669; font-weight: 700; }
-.sim-table .td-neg { color: #dc2626; font-weight: 700; }
-.sim-table .td-warn { color: #d97706; }
-
-/* ===== BADGES ===== */
-.badge {
-  display: inline-block; padding: 2px 8px; border-radius: 10px;
-  font-size: .68rem; font-weight: 700; letter-spacing: .02em;
-}
-.badge-green { background: #dcfce7; color: #166534; }
-.badge-blue { background: #dbeafe; color: #1e40af; }
-.badge-gold { background: #fef9c3; color: #854d0e; }
-.badge-red { background: #fee2e2; color: #991b1b; }
-.badge-purple { background: #f3e8ff; color: #6b21a8; }
-
-/* ===== FORM ===== */
-.form-grid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 14px;
-}
-.form-group { display: flex; flex-direction: column; gap: 5px; }
-.form-group label { font-size: .78rem; font-weight: 600; color: var(--navy); }
-.form-group input {
-  padding: 8px 12px; border: 1.5px solid var(--gray-300);
-  border-radius: var(--radius-sm); font-size: .88rem;
-  transition: border-color .2s;
-}
-.form-group input:focus { outline: none; border-color: var(--gold); }
-.form-hint { font-size: .7rem; color: var(--gray-600); }
-.form-ai-badge {
-  display: inline-block; padding: 1px 6px; border-radius: 8px;
-  font-size: .65rem; font-weight: 700;
-  background: #f3e8ff; color: #6b21a8; margin-left: 4px;
-}
-.btn {
-  padding: 10px 20px; border-radius: var(--radius-sm); border: none;
-  cursor: pointer; font-size: .85rem; font-weight: 700; transition: all .2s;
-}
-.btn-primary { background: linear-gradient(135deg, var(--gold), var(--gold-light)); color: var(--navy); }
-.btn-primary:hover { opacity: .9; transform: translateY(-1px); }
-.btn-secondary { background: var(--gray-200); color: var(--navy); }
-.btn-secondary:hover { background: var(--gray-300); }
-.btn-danger { background: #fee2e2; color: #991b1b; }
-.btn-danger:hover { background: #fecaca; }
-
-/* ===== AI RESEARCH BANNER ===== */
-.ai-research-banner {
-  background: linear-gradient(135deg, #1e1b4b, #312e81);
-  border-radius: var(--radius); padding: 16px 20px;
-  display: flex; align-items: center; gap: 14px;
-  margin-bottom: 20px; color: var(--white);
-}
-.ai-research-icon { font-size: 2rem; flex-shrink: 0; }
-.ai-research-text h3 { font-size: .9rem; font-weight: 700; margin-bottom: 3px; }
-.ai-research-text p { font-size: .75rem; color: rgba(255,255,255,.7); }
-
-/* ===== DIVIDER ===== */
-.divider { border: none; border-top: 1px solid var(--gray-200); margin: 16px 0; }
-
-/* ===== TOAST ===== */
-#toast {
-  position: fixed; bottom: 24px; right: 24px;
-  background: var(--navy); color: var(--white);
-  padding: 12px 20px; border-radius: var(--radius-sm);
-  font-size: .82rem; font-weight: 600;
-  opacity: 0; transform: translateY(10px);
-  transition: all .3s; pointer-events: none; z-index: 9999;
-  box-shadow: var(--shadow-lg);
-}
-#toast.show { opacity: 1; transform: translateY(0); }
-
-/* ===== AI SETTINGS PANEL ===== */
-.ai-settings-panel {
-  background: #1a2f6b; border-bottom: 2px solid #0a1a4a;
-  padding: 10px 24px; display: none; align-items: center; gap: 12px; flex-wrap: wrap;
-}
-.ai-settings-panel.open { display: flex; }
-.ai-settings-panel label { font-size: .75rem; color: #aac; white-space: nowrap; }
-.ai-settings-panel input {
-  flex: 1; min-width: 220px; background: #0d1e55; border: 1px solid #3a5a9a;
-  color: #fff; border-radius: 6px; padding: 6px 10px; font-size: .8rem;
-}
-.ai-settings-panel select {
-  background: #0d1e55; border: 1px solid #3a5a9a; color: #fff;
-  border-radius: 6px; padding: 6px 10px; font-size: .8rem; cursor: pointer;
-}
-
-/* ===== CUSTOMER MODE ===== */
-body.client-mode .header-brand-text p::after { content: ' ｜ 顧客開示モード'; color: #ffd700; }
-body.client-mode [data-tab="form"],
-body.client-mode [data-tab="help"] { display: none !important; }
-body.client-mode #tab-form,
-body.client-mode #tab-help { display: none !important; }
-body.client-mode .btn-header-primary,
-body.client-mode #btn-save,
-body.client-mode #btn-save-form,
-body.client-mode #btn-clear-form,
-body.client-mode #btn-goto-overview,
-body.client-mode #btn-ai-update,
-body.client-mode #btn-excel,
-body.client-mode .ai-research-banner,
-body.client-mode .form-ai-badge { display: none !important; }
-body.client-mode input, body.client-mode select, body.client-mode textarea { pointer-events: none; }
-
-/* ===== EXCEL BTN ===== */
-.btn-excel {
-  background: linear-gradient(135deg, #007c3e, #00a84a);
-  color: #fff; border: none; border-radius: 20px;
-  padding: 6px 14px; font-size: .78rem; font-weight: 700;
-  cursor: pointer; transition: all .2s;
-}
-.btn-excel:hover { opacity: .9; transform: translateY(-1px); }
-
-/* ===== AI UPDATE BTN ===== */
-.btn-ai-update {
-  background: linear-gradient(135deg, #5a0099, #9933ff);
-  color: #fff; border: none; border-radius: 20px;
-  padding: 6px 14px; font-size: .78rem; font-weight: 700;
-  cursor: pointer; transition: all .2s; display: flex; align-items: center; gap: 5px;
-}
-.btn-ai-update:hover { opacity: .9; }
-.btn-ai-update:disabled { opacity: .5; cursor: not-allowed; }
-.ai-spinner {
-  display: none; width: 12px; height: 12px;
-  border: 2px solid rgba(255,255,255,.4); border-top-color: #fff;
-  border-radius: 50%; animation: spin .7s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-@keyframes pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:.4; transform:scale(1.3); } }
-
-/* ===== 販売図面読み取りセクション ===== */
-.maisoku-tabs {
-  display: flex; gap: 4px; margin-bottom: 12px; border-bottom: 2px solid var(--gray-200); padding-bottom: 0;
-}
-.maisoku-tab {
-  padding: 7px 16px; border: none; background: none; cursor: pointer;
-  font-size: .83rem; font-weight: 600; color: #888;
-  border-bottom: 2.5px solid transparent; margin-bottom: -2px;
-  font-family: inherit; transition: all .15s;
-}
-.maisoku-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
-.maisoku-tab:hover:not(.active) { color: #555; background: var(--gray-100); border-radius: 6px 6px 0 0; }
-.maisoku-panel { padding: 4px 0; }
-.maisoku-dropzone {
-  border: 2.5px dashed #aac; border-radius: 12px; padding: 28px;
-  text-align: center; cursor: pointer; transition: all .2s; background: #f8faff;
-}
-.maisoku-dropzone:hover, .maisoku-dropzone.drag-over {
-  border-color: var(--primary); background: #e8f0ff;
-}
-.maisoku-preview-grid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-  gap: 8px; margin-top: 10px;
-}
-.maisoku-preview-item {
-  position: relative; background: #f0f0f0; border-radius: 8px; overflow: hidden;
-}
-.maisoku-preview-item img { width: 100%; height: 90px; object-fit: contain; background: #fff; display: block; }
-.maisoku-preview-item .pdf-icon {
-  height: 90px; display: flex; align-items: center; justify-content: center;
-  font-size: 2rem; background: #fff8f0;
-}
-.maisoku-preview-item .rm-btn {
-  position: absolute; top: 4px; right: 4px; background: #e44; color: #fff;
-  border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 10px;
-  cursor: pointer; display: flex; align-items: center; justify-content: center;
-}
-.maisoku-preview-item .fname {
-  font-size: 10px; padding: 3px 6px; overflow: hidden;
-  text-overflow: ellipsis; white-space: nowrap;
-}
-.maisoku-result-preview {
-  display: none; background: #f0fff4; border: 1.5px solid #00a84a;
-  border-radius: 8px; padding: 10px; margin-top: 10px;
-  font-size: .8rem; color: #005522; white-space: pre-wrap;
-  max-height: 160px; overflow-y: auto;
-}
-
-/* ===== PRINT ===== */
-@media print {
-  .site-header, .tab-nav, #toast, .ai-settings-panel { display: none !important; }
-  .tab-panel { display: block !important; page-break-after: always; }
-  .main-content { padding: 0; max-width: 100%; }
-  .card { box-shadow: none; border: 1px solid #ddd; }
-  .real-cost-hero { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Hiragino Kaku Gothic Pro','Noto Sans JP',Meiryo,sans-serif;background:#f0f4f8;min-height:100vh}
+input,textarea,select{font-family:inherit}
+button{font-family:inherit}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
 </style>
 </head>
 <body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script type="text/babel" data-presets="react">
+const {useState,useEffect,useRef,useCallback}=React;
 
-<!-- HEADER -->
-<header class="site-header">
-  <div class="header-brand">
-    <div class="header-brand-icon">不</div>
-    <div class="header-brand-text">
-      <h1>不動産投資分析レポート</h1>
-      <p id="header-sub">Professional Edition ／ AI調査・試算反映版</p>
-    </div>
-  </div>
-  <div class="header-actions">
-    <!-- AI自動更新インジケーター -->
-    <span id="ai-auto-indicator" style="display:none; align-items:center; gap:5px; font-size:.78rem; color:#a8d8ff; background:rgba(255,255,255,.1); padding:4px 10px; border-radius:20px; white-space:nowrap;">
-      <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#4fc3f7; animation:pulse 1s infinite;"></span>
-      AI更新中...
-    </span>
-    <button class="btn-header btn-header-outline" id="btn-client-mode" title="顧客開示モード切替">👤 顧客開示</button>
-    <button class="btn-excel" id="btn-excel">📥 マイソクExcel</button>
-    <button class="btn-header btn-header-outline" id="btn-ai-settings">⚙️ AI設定</button>
-    <button class="btn-header btn-header-outline" id="btn-print">🖨️ 印刷</button>
-    <button class="btn-header btn-header-primary" id="btn-save">💾 保存</button>
-  </div>
-</header>
+/* ─── CONSTANTS ─── */
+const API_URL="https://api.anthropic.com/v1/messages";
+const MODEL="claude-sonnet-4-20250514";
+const S_PROPS="re_props_v10";
+const S_KEY="re_apikey_v10";
+const NAVY="#002060",NAVY2="#003a8c",GOLD="#c9a84c",GREEN="#1a7a4a",RED="#c0392b",LIGHT="#f0f4f8";
 
-<!-- AI SETTINGS PANEL -->
-<div class="ai-settings-panel" id="ai-settings-panel">
-  <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-    <span style="background:#22c55e;color:#fff;font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:20px;">✅ Manus AI 接続済み</span>
-    <span style="font-size:.72rem;color:#aac;">APIキー不要・サーバー不要 — ManusのAIを直接使用します</span>
-  </div>
-  <label>モデル:</label>
-  <select id="ai-model">
-    <option value="gpt-4.1-mini" selected>GPT-4.1 mini（推奨・高速）</option>
-    <option value="gpt-4.1-nano">GPT-4.1 nano（超高速）</option>
-    <option value="gemini-2.5-flash">Gemini 2.5 Flash（高精度）</option>
-  </select>
-  <span style="font-size:.72rem;color:#aac;margin-top:6px;display:block;">このHTMLファイル単体で動作します。入力フォームの内容を元にアピールポイント・賃料推移・売却相場をAIが再生成します。</span>
-</div>
-
-<!-- TAB NAVIGATION -->
-<nav class="tab-nav" role="tablist">
-  <div class="tab-nav-inner">
-    <button class="tab-btn" role="tab" data-tab="form">入力フォーム</button>
-    <button class="tab-btn active" role="tab" data-tab="overview">物件概要</button>
-    <button class="tab-btn" role="tab" data-tab="combined">キャッシュvs節税効果（3段階）</button>
-    <button class="tab-btn" role="tab" data-tab="expense">臨時費用</button>
-    <button class="tab-btn" role="tab" data-tab="simulation">長期シミュレーション</button>
-    <button class="tab-btn" role="tab" data-tab="exit">売却シナリオ</button>
-    <button class="tab-btn" role="tab" data-tab="help">ヘルプ</button>
-  </div>
-</nav>
-
-<main class="main-content">
-
-<!-- ========== TAB: 入力フォーム ========== -->
-<section class="tab-panel" id="tab-form" role="tabpanel">
-  <div class="section-title">物件情報・財務情報の入力</div>
-
-  <div class="card">
-    <div class="card-title"><span>🏢</span>物件基本情報</div>
-    <div class="form-grid">
-      <div class="form-group">
-        <label>物件名</label>
-        <input type="text" id="prop_name" value="エスリード江坂垂水 707号室">
-      </div>
-      <div class="form-group">
-        <label>所在地</label>
-        <input type="text" id="prop_location" value="大阪府吹田市垂水町3丁目5-8">
-      </div>
-      <div class="form-group">
-        <label>最寄駅・徒歩</label>
-        <input type="text" id="prop_station" value="江坂駅 徒歩10分 / 豊津駅 徒歩10分">
-      </div>
-      <div class="form-group">
-        <label>築年数（年）</label>
-        <input type="number" id="prop_age" value="12">
-      </div>
-      <div class="form-group">
-        <label>構造</label>
-        <input type="text" id="prop_structure" value="RC造（鉄筋コンクリート造）">
-      </div>
-      <div class="form-group">
-        <label>専有面積（㎡）</label>
-        <input type="number" id="prop_area" value="55.25" step="0.01">
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-title"><span>💰</span>財務情報</div>
-    <div class="form-grid">
-      <div class="form-group">
-        <label>月額賃料収入（円）</label>
-        <input type="number" id="rental" value="77460">
-      </div>
-      <div class="form-group">
-        <label>管理費・修繕積立（円/月）</label>
-        <input type="number" id="management" value="11000">
-      </div>
-      <div class="form-group">
-        <label>ローン返済額（円/月）</label>
-        <input type="number" id="loan" value="71955">
-      </div>
-      <div class="form-group">
-        <label>ローン残債（万円）</label>
-        <input type="number" id="debt" value="1707">
-      </div>
-      <div class="form-group">
-        <label>ローン金利（%）</label>
-        <input type="number" id="rate" value="2.0" step="0.1">
-      </div>
-      <div class="form-group">
-        <label>ローン残年数（年）</label>
-        <input type="number" id="years" value="23">
-      </div>
-      <div class="form-group">
-        <label>固定資産税（年額・円）<span class="form-ai-badge">AI
-試算</span></label>
-        <input type="number" id="property_tax" value="60000">
-        <div class="form-hint">建物+土地持分+都市計画税の合計</div>
-      </div>
-      <div class="form-group">
-        <label>減価償却費（年額・円）<span class="form-ai-badge">AI試算</span></label>
-        <input type="number" id="depreciation" value="120000">
-        <div class="form-hint">建物取得価額÷残存耐用年数（35年）</div>
-      </div>
-      <div class="form-group">
-        <label>所得税・住民税率（%）</label>
-        <input type="number" id="tax_rate" value="30">
-        <div class="form-hint">所得税率＋住民税率の合計</div>
-      </div>
-      <div class="form-group">
-        <label>初期投資額（万円）</label>
-        <input type="number" id="initial_investment" value="500">
-        <div class="form-hint">頭金＋諸費用の合計</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-title"><span>📈</span>賃料推移設定（5年ごと）<span class="badge badge-purple" style="margin-left:8px;">AI試算反映</span></div>
-    <div class="notice-box info">
-      <span class="notice-icon">ℹ️</span>
-      <div>江坂エリアの賃料データ（マンションマーケット・LIFULL HOME'S調査）をもとに、RC造・築年数増加・エリア賃貸需要を加味してAIが試算した推移です。第5期以降は入力値から推計しています。</div>
-    </div>
-    <div class="form-grid">
-      <div class="form-group">
-        <label>第1期：1〜5年目（円/月）<span class="form-ai-badge">入力値</span></label>
-        <input type="number" id="rental_0" value="77460">
-      </div>
-      <div class="form-group">
-        <label>第2期：6〜10年目（円/月）<span class="form-ai-badge">入力値</span></label>
-        <input type="number" id="rental_1" value="74360">
-        <div class="form-hint">約-4.0%（築17年相当）</div>
-      </div>
-      <div class="form-group">
-        <label>第3期：11〜15年目（円/月）<span class="form-ai-badge">入力値</span></label>
-        <input type="number" id="rental_2" value="71380">
-        <div class="form-hint">約-4.0%（築22年相当）</div>
-      </div>
-      <div class="form-group">
-        <label>第4期：16〜20年目（円/月）<span class="form-ai-badge">入力値</span></label>
-        <input type="number" id="rental_3" value="68520">
-        <div class="form-hint">約-4.0%（築27年相当）</div>
-      </div>
-      <div class="form-group">
-        <label>第5期：21〜25年目（円/月）<span class="form-ai-badge">AI試算</span></label>
-        <input type="number" id="rental_4" value="66000">
-        <div class="form-hint">約-3.7%（築32年・下落鈍化）</div>
-      </div>
-      <div class="form-group">
-        <label>第6期：26〜30年目（円/月）<span class="form-ai-badge">AI試算</span></label>
-        <input type="number" id="rental_5" value="64000">
-        <div class="form-hint">約-3.0%（築37年相当）</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-title"><span>🏷️</span>売却シナリオ設定<span class="badge badge-purple" style="margin-left:8px;">AI調査・適正価格修正済</span></div>
-    <div class="notice-box warning">
-      <span class="notice-icon">⚠️</span>
-      <div>WEB掲載価格は実勢価格の約1.2倍で表示されることが多いため、適正価格に修正しています。<br>
-      <strong>WEB掲載相場（55㎡・江坂駅10分・築12年RC）: 約3,300万円 → 実勢価格（÷1.2）: 約2,750万円</strong></div>
-    </div>
-    <div class="form-grid">
-      <div class="form-group">
-        <label>相場売却価格（万円）<span class="form-ai-badge">AI修正</span></label>
-        <input type="number" id="exit_market_price" value="2750">
-        <div class="form-hint">WEB掲載3,300万円÷1.2≒2,750万円</div>
-      </div>
-      <div class="form-group">
-        <label>チャレンジ売却価格（万円）<span class="form-ai-badge">AI修正</span></label>
-        <input type="number" id="exit_challenge_price" value="3000">
-        <div class="form-hint">WEB掲載3,600万円÷1.2≒3,000万円</div>
-      </div>
-      <div class="form-group">
-        <label>司法書士・印紙代（円）</label>
-        <input type="number" id="lawyer_fee" value="50000">
-      </div>
-      <div class="form-group">
-        <label>一括返済手数料（円）</label>
-        <input type="number" id="prepay_fee" value="0">
-      </div>
-      <div class="form-group">
-        <label>管理委託解除費用（円）</label>
-        <input type="number" id="cancel_fee" value="0">
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <!-- ===== 販売図面読み取りセクション ===== -->
-    <div class="card-title" style="margin-bottom:12px;"><span>📄</span>販売図面読み取り<span class="badge badge-blue" style="margin-left:8px;">AI解析対応</span></div>
-
-    <!-- 読み取りモードタブ -->
-    <div class="maisoku-tabs" id="maisoku-read-tabs">
-      <button class="maisoku-tab active" data-mtab="text" onclick="switchMaisokuTab('text')">&#x1F4DD; テキスト</button>
-      <button class="maisoku-tab" data-mtab="file" onclick="switchMaisokuTab('file')">&#x1F4CE; 画像・PDF</button>
-      <button class="maisoku-tab" data-mtab="excel" onclick="switchMaisokuTab('excel')">&#x1F4CA; Excel読み取り</button>
-    </div>
-
-    <!-- テキストタブ -->
-    <div class="maisoku-panel" id="maisoku-panel-text">
-      <div class="notice-box" style="margin-bottom:10px; font-size:.82rem;">
-        物件情報テキスト（チラシ・HPのコピペースト等）を貼り付けて「AI解析」または「正規表現解析」を実行してください。
-      </div>
-      <textarea id="maisoku-raw-text" placeholder="例）
-物件名：エスリード江坂垂水
-707号室
-賃料：77,460円
-管理費：7,000円
-修繕積立金：4,000円
-専有面積：55.25㎡
-所在地：大阪府吹田市垂水町3丁目5-8..." style="width:100%; min-height:130px; border:1.5px solid var(--gray-300); border-radius:var(--radius-sm); padding:10px; font-size:.85rem; resize:vertical; font-family:inherit;"></textarea>
-      <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
-        <button class="btn btn-primary" id="btn-maisoku-ai-text" onclick="parseMaisokuWithAI('text')">
-          <span class="ai-spinner" id="spin-maisoku-text"></span>
-          🤖 AI解析してフォームに反映
-        </button>
-        <button class="btn btn-secondary" onclick="parseMaisokuLocal()">🔍 正規表現解析</button>
-        <button class="btn btn-secondary" onclick="clearMaisokuText()">&#x1F5D1; クリア</button>
-      </div>
-      <div class="maisoku-result-preview" id="maisoku-text-preview"></div>
-    </div>
-
-    <!-- 画像・PDFタブ -->
-    <div class="maisoku-panel" id="maisoku-panel-file" style="display:none;">
-      <div class="notice-box" style="margin-bottom:10px; font-size:.82rem;">
-        販売図面の画像（JPG/PNG）またはPDFをアップロードしてください。ClaudeのVision AIが自動解析します。
-      </div>
-      <div class="maisoku-dropzone" id="maisoku-dropzone"
-        ondragover="maisokuDragOver(event)" ondragleave="maisokuDragLeave(event)" ondrop="maisokuDrop(event)"
-        onclick="document.getElementById('maisoku-file-input').click()">
-        <div style="font-size:2.5rem; margin-bottom:8px;">📂</div>
-        <div style="font-size:.88rem; color:#666; line-height:1.6;">
-          画像・PDFをドラッグ&amp;ドロップ<br>またはクリックしてファイルを選択
-        </div>
-        <input type="file" id="maisoku-file-input" accept="image/*,.pdf" multiple style="display:none;" onchange="maisokuHandleFiles(event)">
-      </div>
-      <div class="maisoku-preview-grid" id="maisoku-preview-grid"></div>
-      <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
-        <button class="btn btn-primary" id="btn-maisoku-ai-file" onclick="parseMaisokuWithAI('file')">
-          <span class="ai-spinner" id="spin-maisoku-file"></span>
-          🤖 AI解析してフォームに反映
-        </button>
-        <button class="btn btn-secondary" onclick="clearMaisokuFiles()">&#x1F5D1; ファイルをクリア</button>
-      </div>
-      <div class="maisoku-result-preview" id="maisoku-file-preview"></div>
-    </div>
-
-    <!-- Excel読み取りタブ -->
-    <div class="maisoku-panel" id="maisoku-panel-excel" style="display:none;">
-      <div class="notice-box" style="margin-bottom:10px; font-size:.82rem;">
-        既存のマイソクExcelファイル（.xlsx/.xls）を読み込んで、フォームに自動反映します。
-      </div>
-      <div class="maisoku-dropzone" id="maisoku-excel-dropzone"
-        ondragover="maisokuDragOver(event)" ondragleave="maisokuDragLeave(event)" ondrop="maisokuExcelDrop(event)"
-        onclick="document.getElementById('maisoku-excel-input').click()">
-        <div style="font-size:2.5rem; margin-bottom:8px;">📊</div>
-        <div style="font-size:.88rem; color:#666; line-height:1.6;">
-          Excelファイルをドラッグ&amp;ドロップ<br>またはクリックして選択
-        </div>
-        <input type="file" id="maisoku-excel-input" accept=".xlsx,.xls" style="display:none;" onchange="maisokuExcelRead(event)">
-      </div>
-      <div class="maisoku-result-preview" id="maisoku-excel-preview"></div>
-    </div>
-
-    <hr style="margin:18px 0; border:none; border-top:1px solid var(--gray-200);">
-    <div class="card-title"><span>🏠</span>マイソク用追加情報<span class="badge badge-green" style="margin-left:8px;">Excel出力用</span></div>
-    <div class="form-grid">
-      <div class="form-group">
-        <label>希望販売価格（万円）</label>
-        <input type="number" id="maisoku_price" value="2750">
-        <div class="form-hint">マイソクExcelの販売価格欄に反映</div>
-      </div>
-      <div class="form-group">
-        <label>専有面積（㎡）</label>
-        <input type="number" id="maisoku_area" value="55.25" step="0.01">
-      </div>
-      <div class="form-group">
-        <label>バルコニー面積（㎡）</label>
-        <input type="text" id="maisoku_balcony" value="-">
-      </div>
-      <div class="form-group">
-        <label>室内洗濯機置場</label>
-        <input type="text" id="maisoku_washer" value="有">
-      </div>
-      <div class="form-group">
-        <label>土地権利</label>
-        <input type="text" id="maisoku_landrights" value="所有権">
-      </div>
-      <div class="form-group">
-        <label>総戸数・階建</label>
-        <input type="text" id="maisoku_totalunits" value="62戸（9階建）">
-      </div>
-      <div class="form-group">
-        <label>範局（階）</label>
-        <input type="text" id="maisoku_floor" value="7">
-      </div>
-      <div class="form-group">
-        <label>範局建築年月</label>
-        <input type="text" id="maisoku_builtdate" value="2014年1月">
-      </div>
-      <div class="form-group">
-        <label>管理会社</label>
-        <input type="text" id="maisoku_mgmtco" value="エスリード管理">
-      </div>
-      <div class="form-group">
-        <label>現況</label>
-        <input type="text" id="maisoku_status" value="賌貸中">
-      </div>
-      <div class="form-group">
-        <label>引渡日</label>
-        <input type="text" id="maisoku_delivery" value="応相談">
-      </div>
-      <div class="form-group">
-        <label>その他費用（円/月）</label>
-        <input type="number" id="maisoku_otherfee" value="0">
-      </div>
-    </div>
-      <div class="form-group">
-        <label>管理費（円/月）</label>
-        <input type="number" id="maisoku_mgmtfee" value="7000">
-        <div class="form-hint">管理費単体（修繕積立除く）</div>
-      </div>
-      <div class="form-group">
-        <label>修繕積立金（円/月）</label>
-        <input type="number" id="maisoku_repairfund" value="4000">
-      </div>
-    </div>
-    <div class="form-group" style="margin-top:10px;">
-      <label>備考（その他）</label>
-      <textarea id="maisoku_notes" style="border:1.5px solid var(--gray-300);border-radius:var(--radius-sm);padding:8px 12px;font-size:.88rem;min-height:60px;resize:vertical;">※管理費・修繕積立金の内訳は調査中</textarea>
-    </div>
-    <!-- 会社情報（フッター用） -->
-    <div class="card-title" style="margin-top:16px;"><span>🏢</span>会社情報（マイソクフッター）</div>
-    <div class="form-grid">
-      <div class="form-group">
-        <label>会社名</label>
-        <input type="text" id="maisoku_company" value="株式会社GRエステート">
-      </div>
-      <div class="form-group">
-        <label>免許番号</label>
-        <input type="text" id="maisoku_license" value="国土交通大臣（１）第９９２１号">
-      </div>
-      <div class="form-group">
-        <label>住所</label>
-        <input type="text" id="maisoku_address" value="〒141-0022　東京都品川区東五反田1-16-11-4階">
-      </div>
-      <div class="form-group">
-        <label>電話番号</label>
-        <input type="text" id="maisoku_tel" value="03-6432-5088">
-      </div>
-      <div class="form-group">
-        <label>FAX番号</label>
-        <input type="text" id="maisoku_fax" value="03-6432-5087">
-      </div>
-      <div class="form-group">
-        <label>担当者名</label>
-        <input type="text" id="maisoku_staff" value="野村">
-      </div>
-      <div class="form-group">
-        <label>取引形態</label>
-        <input type="text" id="maisoku_dealtype" value="媒介">
-      </div>
-      <div class="form-group">
-        <label>手数料</label>
-        <input type="text" id="maisoku_commission" value="分かれ">
-      </div>
-    </div>
-  </div>
-
-  <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-    <button class="btn btn-primary" id="btn-save-form">💾 データ保存</button>
-    <button class="btn btn-secondary" id="btn-goto-overview">分析結果を表示 →</button>
-    <button class="btn btn-danger" id="btn-clear-form">🗑️ データ削除</button>
-    <button class="btn-ai-update" id="btn-ai-update">
-      <span class="ai-spinner" id="ai-spin"></span>
-      🤖 AIでアピールポイント・賣料推移・相場を再生成
-    </button>
-  </div>
-</section>
-
-<!-- ========== TAB: 物件概要 ========== -->
-<section class="tab-panel active" id="tab-overview" role="tabpanel">
-
-  <div class="ai-research-banner">
-    <div class="ai-research-icon">🤖</div>
-    <div class="ai-research-text">
-      <h3>AI調査・試算反映済み（2026年3月時点）</h3>
-      <p>マンションマーケット・LIFULL HOME'S・マンションナビ等の公開データをもとに、売却相場・賃料推移・エリア特性をAIが分析・反映しています。</p>
-    </div>
-  </div>
-
-  <!-- 物件基本情報 -->
-  <div class="card">
-    <div class="card-title"><span>🏢</span>物件基本情報</div>
-    <div class="info-grid" id="prop-info-grid">
-      <div class="info-item"><div class="info-item-label">物件名</div><div class="info-item-value" id="disp-name">エスリード江坂垂水 707号室</div></div>
-      <div class="info-item"><div class="info-item-label">所在地</div><div class="info-item-value" id="disp-location">大阪府吹田市垂水町3丁目5-8</div></div>
-      <div class="info-item"><div class="info-item-label">最寄駅・徒歩</div><div class="info-item-value" id="disp-station">江坂駅 徒歩10分 / 豊津駅 徒歩10分</div></div>
-      <div class="info-item"><div class="info-item-label">築年数</div><div class="info-item-value" id="disp-age">12年</div></div>
-      <div class="info-item"><div class="info-item-label">構造</div><div class="info-item-value" id="disp-structure">RC造（鉄筋コンクリート造）</div></div>
-      <div class="info-item"><div class="info-item-label">専有面積</div><div class="info-item-value" id="disp-area">55.25㎡</div></div>
-      <div class="info-item"><div class="info-item-label">階数・向き</div><div class="info-item-value">7階（中高層）</div></div>
-      <div class="info-item"><div class="info-item-label">竣工年月</div><div class="info-item-value">2014年1月</div></div>
-      <div class="info-item"><div class="info-item-label">総戸数</div><div class="info-item-value">62戸（9階建）</div></div>
-      <div class="info-item"><div class="info-item-label">施工会社</div><div class="info-item-value">安藤建設（大手ゼネコン）</div></div>
-      <div class="info-item"><div class="info-item-label">管理会社</div><div class="info-item-value">エスリード管理</div></div>
-      <div class="info-item"><div class="info-item-label">設備</div><div class="info-item-value">オートロック・防犯カメラ・宅配BOX・24hゴミ</div></div>
-    </div>
-  </div>
-
-  <!-- 財務サマリー -->
-  <div class="card">
-    <div class="card-title"><span>💹</span>財務サマリー</div>
-    <div class="finance-cards">
-      <div class="finance-card income">
-        <div class="finance-card-label">月額収入</div>
-        <div class="finance-card-value green" id="ov-income">77,460</div>
-        <div class="finance-card-unit">円</div>
-      </div>
-      <div class="finance-card expense">
-        <div class="finance-card-label">月額支出合計</div>
-        <div class="finance-card-value red" id="ov-expense">82,955</div>
-        <div class="finance-card-unit">円</div>
-      </div>
-      <div class="finance-card cashflow-neg">
-        <div class="finance-card-label">月間CF</div>
-        <div class="finance-card-value orange" id="ov-cf">−5,495</div>
-        <div class="finance-card-unit">円</div>
-      </div>
-      <div class="finance-card neutral">
-        <div class="finance-card-label">ローン残債</div>
-        <div class="finance-card-value blue" id="ov-debt">1,707</div>
-        <div class="finance-card-unit">万円</div>
-      </div>
-      <div class="finance-card income">
-        <div class="finance-card-label">適正売却価格</div>
-        <div class="finance-card-value green" id="ov-exit">2,750</div>
-        <div class="finance-card-unit">万円（AI試算）</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 建物・部屋のアピールポイント -->
-  <div class="card">
-    <div class="card-title"><span>🏆</span>建物・部屋の売却時アピールポイント</div>
-    <div id="building-appeal-container"><!-- AI更新対象 -->
-    <div class="appeal-grid">
-      <div class="appeal-card positive">
-        <div class="appeal-card-title">✅ アピールポイント</div>
-        <div class="appeal-item"><span class="appeal-item-dot">●</span><span><strong>RC造・大手ゼネコン施工</strong>：安藤建設施工のRC造で耐久性・遮音性が高く、長期保有でも安心感がある</span></div>
-        <div class="appeal-item"><span class="appeal-item-dot">●</span><span><strong>55.25㎡の広さ</strong>：江坂エリアでは希少な広めタイプ（主流は26㎡1K）。1LDK〜2DK相当でDINKS・ファミリー需要にも対応</span></div>
-        <div class="appeal-item"><span class="appeal-item-dot">●</span><span><strong>7階・中高層</strong>：眺望・採光・防犯性が高く、騒音も少ない。賃貸・売却ともに人気の階層</span></div>
-        <div class="appeal-item"><span class="appeal-item-dot">●</span><span><strong>2014年築・新耐震基準</strong>：築12年で設備も現代的。耐震性への不安がなく購入者の安心感が高い</span></div>
-        <div class="appeal-item"><span class="appeal-item-dot">●</span><span><strong>充実したセキュリティ</strong>：オートロック・防犯カメラ・モニター付インターホン・ディンプルキーで女性単身者にも訴求</span></div>
-        <div class="appeal-item"><span class="appeal-item-dot">●</span><span><strong>生活利便設備</strong>：宅配ボックス・24時間ゴミ出し・エレベーターでライフスタイルに合わせた利便性</span></div>
-        <div class="appeal-item"><span class="appeal-item-dot">●</span><span><strong>ペット相談可</strong>：入居者層の幅が広く、空室リスクの低減に貢献</span></div>
-        <div class="appeal-item"><span class="appeal-item-dot">●</span><span><strong>エスリードブランド</strong>：日本エスリード（大阪の信頼性の高いデベロッパー）のブランド物件</span></div>
-      </div>
-      <div class="appeal-card negative">
-        <div class="appeal-card-title">⚠️ 注意・マイナスポイント</div>
-        <div class="appeal-item"><span class="appeal-item-dot">●</span><span><strong>同棟内での競合</strong>：エスリード江坂垂水は62戸と小規模だが、同棟内で複数売り出しが重なると競合リスクあり</span></div>
-        <div class="appeal-item"><span class="appeal-item-dot">●</span><span><strong>55㎡タイプの流動性</strong>：26㎡1Kが主流のマンションで55㎡は少数派のため、売却に時間がかかる可能性</span></div>
-        <div class="appeal-item"><span class="appeal-item-dot">●</span><span><strong>修繕積立金の値上がり</strong>：築12年を超え、大規模修繕に向けて修繕積立金の値上がりが予想される</span></div>
-        <div class="appeal-item"><span class="appeal-item-dot">●</span><span><strong>管理費の割高感</strong>：11,000円/月（管理費+修繕積立）は55㎡換算で199円/㎡と標準的だが、値上がりリスクあり</span></div>
-      </div>
-    </div>
-    </div><!-- /building-appeal-container -->
-  </div>
-
-  <!-- 最寄り駅のアピールポイント -->
-  <div class="card">
-    <div class="card-title"><span>🙉</span>最寄り駅（江坂駅・豊津駅）の売却時アピールポイント</div>
-    <div id="station-appeal-container"><!-- AI更新対象 -->
-    <div class="appeal-grid">
-      <div class="appeal-card positive">
-        <div class="appeal-card-title">✅ 江坂駅・豊津駅のアピールポイント</div>
-        <div class="appeal-item"><span class="appeal-item-dot">●</span><span><strong>2路線利用可能</strong>：Osaka Metro御堂筋線（江坂駅）＋阪急千里線（豊津駅）の2路線が徒歩10分圏内。梅田まで直通約12分</span></div>
-        <div class="appeal-item"><span class="appeal-item-dot">●</span><span><strong>北大阪急行電鉄も利用可</strong>：江坂駅は北大阪急行電鉄の起点駅。千里中央・箕面方面へのアクセスも良好</span></div>
-        <div class="appeal-item"><span class="appeal-item-dot">●</span><span><strong>江坂はビジネス街</strong>：オフィスビルが集積する就業エリアで、単身・DINKSの安定した賃貸需要がある</span></div>
-        <div class="appeal-item"><span class="appeal-item-dot">●</span><span><strong>北摂エリアの高い生活水準</strong>：吹田市は大阪府内でも所得水準・教育水準が高い「北摂」エリア。ファミリー層の需要が安定</span></div>
-        <div class="appeal-item"><span class="appeal-item-dot">●</span><span><strong>生活利便性が高い</strong>：徒歩圏内にスーパー10店舗以上・コンビニ10店舗以上・病院・学校が充実</span></div>
-        <div class="appeal-item"><span class="appeal-item-dot">●</span><span><strong>治安が良い</strong>：北摂エリアは大阪市内比で犯罪率が低く、垂水町方面は特に静かな住宅街</span></div>
-        <div class="appeal-item"><span class="appeal-item-dot">●</span><span><strong>価格上昇トレンド</strong>：江坂駅周辺マンション価格は前年比+9.63%（2026年2月）。大阪万博・北大阪急行延伸効果</span></div>
-        <div class="appeal-item"><span class="appeal-item-dot">●</span><span><strong>江坂公園が近い</strong>：513m圏内に緑豊かな江坂公園があり、子育て世帯にも訴求</span></div>
-      </div>
-      <div class="appeal-card negative">
-        <div class="appeal-card-title">⚠️ 江坂駅・豊津駅のマイナスポイント</div>
-        <div class="appeal-item"><span class="appeal-item-dot">●</span><span><strong>徒歩10分は競争力の境界線</strong>：賃貸・売却ともに「徒歩10分」は需要が急減するボーダーライン。徒歩7分以内の物件との差別化が必要</span></div>
-        <div class="appeal-item"><span class="appeal-item-dot">●</span><span><strong>駅西側の歓楽街</strong>：江坂駅西側には居酒屋・風俗店が集中するエリアがあり、ファミリー層への訴求時にマイナス印象を与える可能性</span></div>
-        <div class="appeal-item"><span class="appeal-item-dot">●</span><span><strong>大阪市外の認知度</strong>：大阪市内物件と比較して、関西圏外からの投資家・購入者への知名度・流動性でやや劣る</span></div>
-        <div class="appeal-item"><span class="appeal-item-dot">●</span><span><strong>新御堂筋の騒音</strong>：江坂駅周辺は新御堂筋（国道423号）が通り、交通量が多い。物件の向きによっては騒音が気になる場合あり</span></div>
-      </div>
-    </div>
-    </div><!-- /station-appeal-container -->
-  </div>
-
-  <!-- 現時点での物件状況と売買統括 -->
-  <div class="card">
-    <div class="card-title"><span>📊</span>現時点での物件状況と売買に関する統括（AI分析）</div>
-    <div id="market-summary-container"><!-- AI更新対象 -->
-    <div class="notice-box success">
-      <span class="notice-icon">✅</span>
-      <div><strong>市場環境：売り手市場（2026年3月現在）</strong><br>
-      大阪万博（2025年）・北大阪急行延伸効果により、江坂エリアのマンション価格は上昇トレンドにあります。前年比+9.63%（2026年2月）と大幅な価格上昇が確認されており、現在は売却に有利な市場環境です。</div>
-    </div>
-    <div style="margin-top:14px;">
-      <table class="data-table">
-        <thead>
-          <tr><th>評価項目</th><th>現状</th><th>評価</th><th>コメント</th></tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><strong>売却余力</strong></td>
-            <td>適正売却価格2,750万円 vs ローン残債1,707万円</td>
-            <td><span class="badge badge-green">◎ 良好</span></td>
-            <td>売却コスト差引後も約900〜1,000万円の手残りが期待できる</td>
-          </tr>
-          <tr>
-            <td><strong>賃貸収益性</strong></td>
-            <td>月間CF −5,495円（ローン返済中）</td>
-            <td><span class="badge badge-gold">△ 要注意</span></td>
-            <td>ローン完済後（23年後）は月間+4〜5万円のプラスに転換見込み</td>
-          </tr>
-          <tr>
-            <td><strong>資産価値トレンド</strong></td>
-            <td>前年比+9.63%（江坂駅周辺）</td>
-            <td><span class="badge badge-green">◎ 上昇中</span></td>
-            <td>3年前比+13万円/㎡。大阪府平均の約2倍の上昇率</td>
-          </tr>
-          <tr>
-            <td><strong>賃貸需要</strong></td>
-            <td>利回り4.1%（江坂駅エリア）</td>
-            <td><span class="badge badge-blue">○ 安定</span></td>
-            <td>55㎡タイプは希少性あり。ただし賃料帯が高く入居者層が限定的</td>
-          </tr>
-          <tr>
-            <td><strong>売却タイミング</strong></td>
-            <td>現在は売り手市場</td>
-            <td><span class="badge badge-green">◎ 好機</span></td>
-            <td>価格上昇局面での売却は有利。ただし保有継続でローン完済後の収益化も選択肢</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <div class="notice-box warning" style="margin-top:14px;">
-      <span class="notice-icon">⚠️</span>
-      <div><strong>総合判断：「売却」と「保有継続」の両方に合理性あり</strong><br>
-      現時点での売却は約900～1,000万円の手残りが期待でき、市場環境も好転しています。一方、ローン完済後（23年後）は年間約　5060万円のプラスキャッシュフローが期待でき、長期保有にも合理性があります。最終的な判断は、他の資産状況・税務状況・ライフプランとの総合的な検討が必要です。</div>
-    </div>
-    </div><!-- /market-summary-container -->
-  </div>
-</section>
-
-<!-- ========== TAB: キャッシュvs節税効果（3段階） ========== -->
-<section class="tab-panel" id="tab-combined" role="tabpanel">
-
-  <!-- ★ 実質年間コスト HERO（最大表示） -->
-  <div class="real-cost-hero">
-    <div class="real-cost-hero-label">実質的な年間コスト（税効果加味後）</div>
-    <div class="real-cost-hero-value negative" id="hero-real-annual">−172,776円</div>
-    <div class="real-cost-hero-sub">月換算：<strong id="hero-real-monthly">−14,398円/月</strong></div>
-    <div class="real-cost-breakdown">
-      <div class="real-cost-item">
-        <div class="real-cost-item-label">①純キャッシュアウト</div>
-        <div class="real-cost-item-value neg" id="hero-cashout">−125,940円</div>
-        <div class="real-cost-item-unit" id="hero-cashout-m">−10,495円/月</div>
-      </div>
-      <div class="real-cost-item">
-        <div class="real-cost-item-label">②不動産所得税（納税）</div>
-        <div class="real-cost-item-value neg" id="hero-incometax">−82,836円</div>
-        <div class="real-cost-item-unit" id="hero-incometax-m">−6,903円/月</div>
-      </div>
-      <div class="real-cost-item">
-        <div class="real-cost-item-label">③減価償却節税（還付相当）</div>
-        <div class="real-cost-item-value pos" id="hero-depsaving">+36,000円</div>
-        <div class="real-cost-item-unit" id="hero-depsaving-m">+3,000円/月</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- キャッシュ vs 節税効果（3段階） -->
-  <div class="section-title">キャッシュ vs 節税効果（税金・固定資産税加味）</div>
-  <div>
-
-      <!-- ①単純なキャッシュアウト -->
-      <div class="cf-stage">
-        <div class="cf-stage-header stage1">
-          <span>①</span>
-          <span>単純なキャッシュアウト</span>
-          <span class="cf-stage-badge">現金の動き</span>
-        </div>
-        <div class="cf-stage-body">
-          <table class="data-table">
-            <thead>
-              <tr><th>項目</th><th>年間（円）</th><th>月換算（円）</th></tr>
-            </thead>
-            <tbody>
-              <tr><td>賃料収入</td><td class="td-income" id="s1-income">+929,520</td><td class="td-income" id="s1-income-m">+77,460</td></tr>
-              <tr><td>管理費・修繕積立</td><td class="td-expense" id="s1-mgmt">−132,000</td><td class="td-expense" id="s1-mgmt-m">−11,000</td></tr>
-              <tr><td>ローン返済額</td><td class="td-expense" id="s1-loan">−863,460</td><td class="td-expense" id="s1-loan-m">−71,955</td></tr>
-              <tr><td>固定資産税</td><td class="td-expense" id="s1-ptax">−60,000</td><td class="td-expense" id="s1-ptax-m">−5,000</td></tr>
-              <tr class="td-total"><td><strong>純キャッシュアウト</strong></td><td class="td-total-accent" id="s1-total">−125,940</td><td class="td-total-accent" id="s1-total-m">−10,495</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- ②不動産所得で発生する損益 -->
-      <div class="cf-stage">
-        <div class="cf-stage-header stage2">
-          <span>②</span>
-          <span>不動産所得の損益（税務上）</span>
-          <span class="cf-stage-badge">確定申告ベース</span>
-        </div>
-        <div class="cf-stage-body">
-          <table class="data-table">
-            <thead>
-              <tr><th>項目</th><th>年間（円）</th><th>月換算（円）</th></tr>
-            </thead>
-            <tbody>
-              <tr><td>年間賃料収入</td><td class="td-income" id="s2-income">+929,520</td><td class="td-income" id="s2-income-m">+77,460</td></tr>
-              <tr><td>管理費・修繕積立</td><td class="td-expense" id="s2-mgmt">−132,000</td><td class="td-expense" id="s2-mgmt-m">−11,000</td></tr>
-              <tr><td>ローン利息（推定年額）</td><td class="td-expense" id="s2-interest">−341,400</td><td class="td-expense" id="s2-interest-m">−28,450</td></tr>
-              <tr><td>固定資産税</td><td class="td-expense" id="s2-ptax">−60,000</td><td class="td-expense" id="s2-ptax-m">−5,000</td></tr>
-              <tr><td>減価償却費（※現金支出なし）</td><td class="td-expense" id="s2-dep">−120,000</td><td class="td-expense" id="s2-dep-m">−10,000</td></tr>
-              <tr class="td-total"><td><strong>不動産所得</strong></td><td class="td-total-accent" id="s2-re-income">+276,120</td><td class="td-total-accent" id="s2-re-income-m">+23,010</td></tr>
-              <tr><td>所得税・住民税（<span id="s2-taxrate-disp">30</span>%）</td><td class="td-expense" id="s2-tax">−82,836</td><td class="td-expense" id="s2-tax-m">−6,903</td></tr>
-            </tbody>
-          </table>
-          <div class="formula-box" style="margin-top:10px;">
-            <div class="formula-box-title">📐 不動産所得の計算式</div>
-            <div class="formula-line">不動産所得 = 家賃収入 − (管理費 + ローン利息 + 固定資産税 + 減価償却費)</div>
-            <div class="formula-line">所得税・住民税 = 不動産所得 × 税率</div>
-            <div class="formula-result" id="s2-formula">= 276,120 × 30% = 82,836円（納税）</div>
-          </div>
-          <div class="notice-box info" style="margin-top:8px;">
-            <span class="notice-icon">ℹ️</span>
-            <div style="font-size:.74rem;">不動産所得がプラスの場合は納税が発生します。マイナスの場合は他の所得と損益通算し還付が受けられます。</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ③減価償却による節税効果（不動産所得とは独立計算） -->
-      <div class="cf-stage">
-        <div class="cf-stage-header stage3">
-          <span>③</span>
-          <span>減価償却による節税効果</span>
-          <span class="cf-stage-badge">実際の減税額</span>
-        </div>
-        <div class="cf-stage-body">
-          <table class="data-table">
-            <thead>
-              <tr><th>項目</th><th>年間（円）</th><th>月換算（円）</th></tr>
-            </thead>
-            <tbody>
-              <tr><td>減価償却費（帳簿上の経費）</td><td id="s3-dep">120,000</td><td id="s3-dep-m">10,000</td></tr>
-              <tr><td>税率（所得税+住民税）</td><td id="s3-rate">30%</td><td>—</td></tr>
-              <tr class="td-total"><td><strong>減価償却による節税額</strong></td><td class="td-total-accent" id="s3-saving">+36,000</td><td class="td-total-accent" id="s3-saving-m">+3,000</td></tr>
-            </tbody>
-          </table>
-          <div class="formula-box" style="margin-top:10px;">
-            <div class="formula-box-title">📐 減価償却節税の計算式</div>
-            <div class="formula-line">節税額 = 減価償却費 × 税率</div>
-            <div class="formula-result" id="s3-formula">= 120,000 × 30% = 36,000円/年（3,000円/月）</div>
-          </div>
-          <div class="notice-box success" style="margin-top:8px;">
-            <span class="notice-icon">💡</span>
-            <div style="font-size:.74rem;"><strong>ポイント：</strong>減価償却費は実際の現金支出を伴わない帳簿上の費用です。不動産所得の計算とは別口で、課税所得を圧縮する効果があります。不動産所得がプラスでもマイナスでも、減価償却費の分だけ税負担が軽減されます。</div>
-          </div>
-        </div>
-      </div>
-  </div>
-
-</section>
-
-<!-- ========== TAB: 臨時費用 ========== -->
-<section class="tab-panel" id="tab-expense" role="tabpanel">
-  <div class="section-title">臨時費用シミュレーション</div>
-  <div class="card">
-    <div class="card-title"><span>🔧</span>設備交換・修繕費用の見込み（全期間）</div>
-    <div style="overflow-x:auto;">
-      <table class="data-table">
-        <thead>
-          <tr><th>年度</th><th>費用項目</th><th>概算費用</th><th>備考</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>4年目</td><td>退去リフォーム（原状回復）</td><td>50,000円</td><td>4年に1度の空室想定</td></tr>
-          <tr><td>8年目</td><td>退去リフォーム</td><td>50,000円</td><td></td></tr>
-          <tr><td>10年目</td><td>エアコン交換 + 壁紙・床張替</td><td>300,000円</td><td>エアコン10万円 + 内装20万円</td></tr>
-          <tr><td>12年目</td><td>退去リフォーム</td><td>50,000円</td><td></td></tr>
-          <tr><td>15年目</td><td>給湯器交換 + 退去リフォーム</td><td>200,000円</td><td>給湯器15万円 + リフォーム5万円</td></tr>
-          <tr><td>16年目</td><td>退去リフォーム</td><td>50,000円</td><td></td></tr>
-          <tr><td>20年目</td><td>ユニットバス・トイレ・壁紙床 + 退去リフォーム</td><td>1,071,300円</td><td>大規模リフォーム</td></tr>
-          <tr><td>24年目</td><td>退去リフォーム</td><td>50,000円</td><td></td></tr>
-          <tr><td>25年目</td><td>エアコン交換 + キッチン交換</td><td>500,000円</td><td>エアコン10万円 + キッチン40万円</td></tr>
-          <tr><td>28年目</td><td>退去リフォーム</td><td>50,000円</td><td></td></tr>
-          <tr><td>30年目</td><td>給湯器交換 + 退去リフォーム</td><td>1,150,000円</td><td>給湯器15万円 + 大規模修繕対応</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-  <div class="card">
-    <div class="card-title"><span>📝</span>各項目の詳細説明</div>
-    <details style="margin-bottom:8px;"><summary style="cursor:pointer;padding:10px;background:#f8f9fa;border-radius:6px;font-weight:600;font-size:.82rem;">エアコン交換（10年目・25年目）</summary>
-      <div style="padding:12px;font-size:.8rem;color:#374151;">一般的にエアコンの寿命は10〜15年です。賃貸物件では定期的な交換が必要となります。室内機と室外機の両方を交換する場合、相場は10万〜15万円程度です。</div>
-    </details>
-    <details style="margin-bottom:8px;"><summary style="cursor:pointer;padding:10px;background:#f8f9fa;border-radius:6px;font-weight:600;font-size:.82rem;">給湯器交換（15年目・30年目）</summary>
-      <div style="padding:12px;font-size:.8rem;color:#374151;">給湯器の寿命は15〜20年です。ガス給湯器の場合は15万円程度、エコキュートの場合は20万円以上かかります。</div>
-    </details>
-    <details style="margin-bottom:8px;"><summary style="cursor:pointer;padding:10px;background:#f8f9fa;border-radius:6px;font-weight:600;font-size:.82rem;">ユニットバス交換（20年目）</summary>
-      <div style="padding:12px;font-size:.8rem;color:#374151;">ユニットバスの寿命は20〜30年です。交換には50万円程度の費用が必要です。</div>
-    </details>
-    <details style="margin-bottom:8px;"><summary style="cursor:pointer;padding:10px;background:#f8f9fa;border-radius:6px;font-weight:600;font-size:.82rem;">退去時リフォーム（4年ごと）</summary>
-      <div style="padding:12px;font-size:.8rem;color:#374151;">入居者が退去する際の原状回復費用です。クリーニング・小修繕・壁穴補修等が含まれます。相場は5万円程度で、4年に1度の空室を想定しています。</div>
-    </details>
-  </div>
-  <div class="notice-box warning">
-    <span class="notice-icon">⚠️</span>
-    <div>上記の相場金額は一般的な目安です。物件の立地・グレード・施工業者により変動します。また、分譲マンションの大規模修繕（外壁・屋根等）は管理組合が負担するため、ここには含まれていません。</div>
-  </div>
-</section>
-
-<!-- ========== TAB: 長期シミュレーション ========== -->
-<section class="tab-panel" id="tab-simulation" role="tabpanel">
-  <div class="section-title">所有継続・損益分岐シミュレーション</div>
-
-  <div style="background:linear-gradient(135deg,var(--navy),#16213e);border-radius:var(--radius);padding:24px 28px;margin-bottom:20px;box-shadow:var(--shadow-lg);display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1px;">
-    <div style="padding:14px 16px;text-align:center;border-right:1px solid rgba(255,255,255,.08);">
-      <div style="font-size:.72rem;color:rgba(255,255,255,.55);letter-spacing:.05em;margin-bottom:6px;">ローン完済年数</div>
-      <div style="font-size:1.55rem;font-weight:800;color:white;" id="sim-loan-years">23年</div>
-    </div>
-    <div style="padding:14px 16px;text-align:center;border-right:1px solid rgba(255,255,255,.08);">
-      <div style="font-size:.72rem;color:rgba(255,255,255,.55);letter-spacing:.05em;margin-bottom:6px;">シミュレーション期間</div>
-      <div style="font-size:1.55rem;font-weight:800;color:white;" id="sim-period">23年</div>
-    </div>
-    <div style="padding:14px 16px;text-align:center;border-right:1px solid rgba(255,255,255,.08);">
-      <div style="font-size:.72rem;color:rgba(255,255,255,.55);letter-spacing:.05em;margin-bottom:6px;">完済時の累計収支</div>
-      <div style="font-size:1.55rem;font-weight:800;color:#ff6b6b;" id="sim-at-completion">−</div>
-    </div>
-    <div style="padding:14px 16px;text-align:center;">
-      <div style="font-size:.72rem;color:rgba(255,255,255,.55);letter-spacing:.05em;margin-bottom:6px;">累計収支がプラスに転じる年</div>
-      <div style="font-size:1.55rem;font-weight:800;color:#fbbf24;" id="sim-plus-year">計算中</div>
-    </div>
-  </div>
-
-  <!-- 計算根拠 -->
-  <div class="card">
-    <div class="card-title"><span>🎯</span>シミュレーションの根拠と計算式</div>
-    <div class="formula-box">
-      <div class="formula-box-title">📐 累計収支の計算方法</div>
-      <div class="formula-line">累計収支 = Σ(年間実質収支) − 初期投資額</div>
-      <div class="formula-line">年間実質収支 = 年間家賃 − 管理費 − ローン返済 − 固定資産税 − 臨時費用 − 空室損失 + 税効果</div>
-      <div class="formula-line">─────────────────────────────────</div>
-      <div class="formula-line">空室損失の計算式（東京以外・4年に1度まとめて計上）：</div>
-      <div class="formula-line">  空室期間1.5ヶ月 + 広告料1.5ヶ月 + 仲介手数料1ヶ月 = 計4ヶ月分</div>
-      <div class="formula-line">  4年分の空室損失 = 月額賃料 × 4ヶ月（4年目・8年目・12年目…に計上）</div>
-      <div class="formula-line">─────────────────────────────────</div>
-      <div class="formula-line">税効果（節税または納税）：</div>
-      <div class="formula-line">  不動産所得 = 家賃収入 − (管理費 + ローン利息 + 固定資産税 + 減価償却費)</div>
-      <div class="formula-line">  税効果 = −(不動産所得 × 税率)　※プラスなら納税、マイナスなら節税（還付）</div>
-      <div class="formula-result" id="sim-summary-text">初期投資500万円を回収するには、現在の収支では23年以上かかる見込みです。</div>
-    </div>
-    <div class="notice-box info" style="margin-top:10px;">
-      <span class="notice-icon">ℹ️</span>
-      <div><strong>空室賃料について：</strong>空室損失の計算には、その時々の賃料（各期の月額賃料）を使用しています。第1期は77,460円、第2期は74,360円というように、賃料推移に連動して空室損失額も変化します。</div>
-    </div>
-  </div>
-
-  <!-- 年間収支詳細表 -->
-  <div class="card">
-    <div class="card-title"><span>📋</span>年間収支詳細表（ローン完済まで）</div>
-    <div style="overflow-x:auto;">
-      <table class="sim-table" id="sim-detail-table">
-        <thead>
-          <tr>
-            <th style="text-align:left;">年度</th>
-            <th>賃料（月）</th>
-            <th>年間家賃</th>
-            <th>管理費</th>
-            <th>ローン返済</th>
-            <th>空室損失</th>
-            <th>臨時費用</th>
-            <th>税効果</th>
-            <th>年間収支</th>
-            <th>累計収支</th>
-          </tr>
-        </thead>
-        <tbody id="sim-tbody">
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- ローン完済後の分析 -->
-  <div class="card">
-    <div class="card-title"><span>🏁</span>ローン完済後の収支分析</div>
-    <div id="post-loan-analysis"></div>
-  </div>
-</section>
-
-<!-- ========== TAB: 売却シナリオ ========== -->
-<section class="tab-panel" id="tab-exit" role="tabpanel">
-  <div class="section-title">売却シナリオ分析（今売却した場合）</div>
-
-  <div class="card">
-    <div class="card-title"><span>🏷️</span>売却シナリオ比較</div>
-    <table class="data-table" id="exit-table">
-      <thead>
-        <tr><th>シナリオ</th><th>売却価格</th><th>仲介手数料</th><th>その他諸経費</th><th>ローン返済</th><th>手残り</th></tr>
-      </thead>
-      <tbody id="exit-tbody"></tbody>
-    </table>
-    <div class="formula-box" style="margin-top:12px;">
-      <div class="formula-box-title">📐 売却諸経費の内訳</div>
-      <div class="formula-line">仲介手数料 = (売買代金 × 3% + 6万円) × 1.1（消費税込）</div>
-      <div class="formula-line">その他諸経費 = 司法書士・印紙代 + 一括返済手数料 + 管理委託解除費用</div>
-      <div class="formula-line">手残り = 売却価格 − (仲介手数料 + その他諸経費 + ローン残債)</div>
-    </div>
-  </div>
-
-  <div class="notice-box info">
-    <span class="notice-icon">ℹ️</span>
-    <div><strong>AI調査による売却相場の根拠：</strong><br>
-    マンションマーケット（2025年6月更新）によると、江坂エリアのマンション相場単価は82〜85万円/㎡。55.25㎡換算で4,530〜4,696万円となりますが、江坂駅10分・55㎡タイプの流動性を考慮し、江坂駅全体の坪単価176.5万円/坪（2026年2月）×16.72坪≒2,951万円をベースに算出。WEB掲載価格（約3,300万円）を実勢価格換算（÷1.2）した2,750万円を相場売却価格として設定しています。</div>
-  </div>
-</section>
-
-<!-- ========== TAB: ヘルプ ========== -->
-<section class="tab-panel" id="tab-help" role="tabpanel">
-  <div class="card">
-    <div class="card-title"><span>❓</span>このツールについて</div>
-    <p style="font-size:.85rem;line-height:1.8;color:#374151;">本ツールは、不動産投資物件の収支シミュレーションを行うための個人用分析ツールです。入力フォームに物件情報・財務情報を入力することで、各タブの分析結果がリアルタイムで更新されます。</p>
-    <hr class="divider">
-    <div class="card-title" style="margin-top:8px;"><span>🤖</span>AI調査・試算の根拠</div>
-    <table class="data-table" style="margin-top:8px;">
-      <thead><tr><th>項目</th><th>根拠・出典</th><th>信頼度</th></tr></thead>
-      <tbody>
-        <tr><td>売却相場（2,750万円）</td><td>マンションマーケット・マンションナビ・江坂駅周辺坪単価データ（2025〜2026年）をWEB掲載価格÷1.2で実勢換算</td><td><span class="badge badge-green">高</span></td></tr>
-        <tr><td>賃料推移（第5〜6期）</td><td>江坂エリアRC造の過去賃料下落率（年0.5〜1.0%）をもとに5年ごとの下落率3〜4%で試算</td><td><span class="badge badge-blue">中〜高</span></td></tr>
-        <tr><td>固定資産税（60,000円）</td><td>吹田市の固定資産税率1.4%・都市計画税・55㎡RC造の評価額から試算。入力値と一致</td><td><span class="badge badge-green">高</span></td></tr>
-        <tr><td>減価償却費（120,000円）</td><td>RC造残存耐用年数35年・建物取得価額420万円から逆算。入力値と一致</td><td><span class="badge badge-green">高</span></td></tr>
-        <tr><td>空室損失（東京以外・4年に1度）</td><td>空室1.5ヶ月+広告1.5ヶ月+仲介1ヶ月=4ヶ月分を4年に1度計上</td><td><span class="badge badge-green">高</span></td></tr>
-      </tbody>
-    </table>
-    <div class="notice-box warning" style="margin-top:12px;">
-      <span class="notice-icon">⚠️</span>
-      <div>本ツールの計算結果はあくまで参考値です。実際の投資判断は、税理士・不動産専門家にご相談の上、ご自身の責任でお行いください。</div>
-    </div>
-    <hr class="divider">
-    <div class="card-title" style="margin-top:8px;"><span>⌨️</span>ショートカットキー</div>
-    <table class="data-table" style="margin-top:8px;">
-      <thead><tr><th>キー</th><th>機能</th></tr></thead>
-      <tbody>
-        <tr><td><code>Ctrl + S</code></td><td>データ保存</td></tr>
-        <tr><td><code>Ctrl + P</code></td><td>印刷</td></tr>
-      </tbody>
-    </table>
-  </div>
-</section>
-
-</main>
-
-<footer style="text-align:center;padding:20px;font-size:.72rem;color:#94a3b8;border-top:1px solid #e2e8f0;margin-top:20px;background:white;">
-  不動産投資分析レポート v8.0 ／ Professional Edition ／ 最終更新：2026年3月17日<br>
-  「入力フォーム」タブで物件情報を入力し、「💾 データ保存」ボタンでブラウザに保存してください。
-</footer>
-
-<div id="toast"></div>
-
-<script>
-// ===== DATA =====
-const DEFAULTS = {
-  prop_name: 'エスリード江坂垂水 707号室',
-  prop_location: '大阪府吹田市垂水町3丁目5-8',
-  prop_station: '江坂駅 徒歩10分 / 豊津駅 徒歩10分',
-  prop_age: 12,
-  prop_structure: 'RC造（鉄筋コンクリート造）',
-  prop_area: 55.25,
-  rental: 77460,
-  management: 11000,
-  loan: 71955,
-  debt: 1707,
-  rate: 2.0,
-  years: 23,
-  property_tax: 60000,
-  depreciation: 120000,
-  tax_rate: 30,
-  initial_investment: 500,
-  rental_0: 77460,
-  rental_1: 74360,
-  rental_2: 71380,
-  rental_3: 68520,
-  rental_4: 66000,
-  rental_5: 64000,
-  exit_market_price: 2750,
-  exit_challenge_price: 3000,
-  lawyer_fee: 50000,
-  prepay_fee: 0,
-  cancel_fee: 0
+/* ─── UTILS ─── */
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const now=()=>new Date().toISOString();
+const fmtD=s=>s?new Date(s).toLocaleDateString("ja-JP",{year:"numeric",month:"2-digit",day:"2-digit"}):"−";
+const fmt=n=>(n!=null&&n!=="")?Number(n).toLocaleString():"−";
+const fmtY=n=>(n!=null&&n!=="")?Number(n).toLocaleString()+"円":"−";
+const fmtM=n=>(n!=null&&n!=="")?Math.round(Number(n)/10000).toLocaleString()+"万円":"−";
+const fmtP=n=>(n!=null&&n!=="")?Number(n).toFixed(2)+"%":"−";
+const getCF=p=>(Number(p.rent)||0)-(Number(p.managementFee)||0)-(Number(p.repairFund)||0)-(Number(p.loanPayment)||0);
+const getYld=p=>{
+  if(!p.askingPrice||!p.rent)return null;
+  const net=((Number(p.rent)||0)-(Number(p.managementFee)||0)-(Number(p.repairFund)||0))*12;
+  return net/((Number(p.askingPrice)||1)*10000)*100;
 };
+const toB64=f=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(",")[1]);r.onerror=rej;r.readAsDataURL(f);});
 
-// ===== UTILS =====
-const fmt = (n, dec=0) => {
-  if (isNaN(n) || n === null || n === undefined) return '—';
-  return n.toLocaleString('ja-JP', {minimumFractionDigits:dec, maximumFractionDigits:dec});
-};
-const fmtSign = (n) => {
-  if (isNaN(n) || n === null) return '—';
-  return (n >= 0 ? '+' : '') + fmt(n);
-};
-const $ = id => document.getElementById(id);
-const getVal = id => parseFloat(document.getElementById(id)?.value) || 0;
-const getText = id => document.getElementById(id)?.value || '';
+/* ─── LOCAL STORAGE ─── */
+const lsGet=k=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch{return null;}};
+const lsSet=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch(e){console.error(e);}};
 
-// ===== TOAST =====
-function showToast(msg, duration=2500) {
-  const t = $('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), duration);
-}
-
-// ===== TABS =====
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-    btn.classList.add('active');
-    const tab = btn.dataset.tab;
-    document.getElementById('tab-' + tab)?.classList.add('active');
-    recalcAll();
+/* ─── API ─── */
+async function callClaude(apiKey,system,userContent){
+  const body={model:MODEL,max_tokens:4096,messages:[{role:"user",content:userContent}]};
+  if(system)body.system=system;
+  const res=await fetch(API_URL,{
+    method:"POST",
+    headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+    body:JSON.stringify(body)
   });
-});
-
-// ===== SAVE / LOAD =====
-function saveData() {
-  const data = {};
-  Object.keys(DEFAULTS).forEach(k => {
-    const el = document.getElementById(k);
-    if (el) data[k] = el.value;
-  });
-  localStorage.setItem('realestate_v8', JSON.stringify(data));
-  showToast('✅ データを保存しました');
-}
-function loadData() {
-  const raw = localStorage.getItem('realestate_v8');
-  if (!raw) return;
-  try {
-    const data = JSON.parse(raw);
-    Object.keys(data).forEach(k => {
-      const el = document.getElementById(k);
-      if (el) el.value = data[k];
-    });
-  } catch(e) {}
-}
-function clearData() {
-  if (!confirm('保存データを削除しますか？')) return;
-  localStorage.removeItem('realestate_v8');
-  Object.keys(DEFAULTS).forEach(k => {
-    const el = document.getElementById(k);
-    if (el) el.value = DEFAULTS[k];
-  });
-  recalcAll();
-  showToast('🗑️ データを削除しました');
+  const data=await res.json();
+  if(!res.ok)throw new Error(data.error?.message||`HTTP ${res.status}`);
+  return data.content.find(b=>b.type==="text")?.text||"";
 }
 
-// ===== setText helper =====
-function setText(id, val) {
-  const el = $(id);
-  if (el) el.textContent = val;
-}
-
-// ===== MAINTENANCE COSTS (special years) =====
-const SPECIAL_MAINT = {
-  10: 300000,   // エアコン + 壁紙床
-  15: 150000,   // 給湯器
-  20: 1021300,  // ユニットバス + トイレ + 壁紙床
-  25: 500000,   // エアコン + キッチン
-  30: 1150000,  // 給湯器 + 大規模修繕対応
-};
-
-// ===== MAIN CALCULATION =====
-function recalcAll() {
-  const rental      = getVal('rental');
-  const management  = getVal('management');
-  const loan        = getVal('loan');
-  const debt        = getVal('debt');
-  const rate        = getVal('rate');
-  const years       = getVal('years');
-  const property_tax   = getVal('property_tax');
-  const depreciation   = getVal('depreciation');
-  const tax_rate       = getVal('tax_rate') / 100;
-  const initial_inv    = getVal('initial_investment') * 10000;
-  const rentals = [
-    getVal('rental_0'), getVal('rental_1'), getVal('rental_2'),
-    getVal('rental_3'), getVal('rental_4'), getVal('rental_5')
-  ];
-  const exit_market    = getVal('exit_market_price') * 10000;
-  const exit_challenge = getVal('exit_challenge_price') * 10000;
-  const lawyer_fee     = getVal('lawyer_fee');
-  const prepay_fee     = getVal('prepay_fee');
-  const cancel_fee     = getVal('cancel_fee');
-
-  // ローン利息推定（残債×金利）
-  const loan_interest_annual = debt * 10000 * (rate / 100);
-
-  // 月間CF
-  const monthly_cf = rental - management - loan;
-  const annual_cf_simple = monthly_cf * 12;
-
-  // 年間各値
-  const mgmt_annual  = management * 12;
-  const loan_annual  = loan * 12;
-  const income_annual = rental * 12;
-
-  // ①純キャッシュアウト（固定資産税含む）
-  const cashout_annual = income_annual - mgmt_annual - loan_annual - property_tax;
-
-  // ②不動産所得・税
-  const re_income = income_annual - mgmt_annual - loan_interest_annual - property_tax - depreciation;
-  const income_tax = re_income * tax_rate;  // プラスなら納税、マイナスなら還付
-
-  // ③減価償却節税（不動産所得とは独立）
-  const dep_saving = depreciation * tax_rate;
-
-  // 実質年間コスト = ①キャッシュアウト − ②所得税（納税はマイナス） + ③節税
-  const real_annual = cashout_annual - income_tax + dep_saving;
-  const real_monthly = Math.round(real_annual / 12);
-
-  // ===== UPDATE: 物件概要 =====
-  setText('disp-name',      getText('prop_name'));
-  setText('disp-location',  getText('prop_location'));
-  setText('disp-station',   getText('prop_station'));
-  setText('disp-age',       getVal('prop_age') + '年');
-  setText('disp-structure', getText('prop_structure'));
-  setText('disp-area',      getVal('prop_area') + '㎡');
-  setText('ov-income',  fmt(rental));
-  setText('ov-expense', fmt(management + loan));
-  setText('ov-cf',      fmtSign(monthly_cf));
-  setText('ov-debt',    fmt(debt));
-  setText('ov-exit',    fmt(getVal('exit_market_price')));
-
-  // ===== UPDATE: HERO 実質年間コスト =====
-  const heroEl = $('hero-real-annual');
-  if (heroEl) {
-    heroEl.textContent = fmtSign(Math.round(real_annual)) + '円';
-    heroEl.className = 'real-cost-hero-value ' + (real_annual >= 0 ? 'positive' : 'negative');
-  }
-  setText('hero-real-monthly', fmtSign(real_monthly) + '円/月');
-  setText('hero-cashout',    fmtSign(Math.round(cashout_annual)) + '円');
-  setText('hero-cashout-m',  fmtSign(Math.round(cashout_annual / 12)) + '円/月');
-  // ②は所得税の符号（納税=マイナス、還付=プラス）
-  setText('hero-incometax',   fmtSign(-Math.round(income_tax)) + '円');
-  setText('hero-incometax-m', fmtSign(-Math.round(income_tax / 12)) + '円/月');
-  setText('hero-depsaving',   '+' + fmt(Math.round(dep_saving)) + '円');
-  setText('hero-depsaving-m', '+' + fmt(Math.round(dep_saving / 12)) + '円/月');
-
-  // ===== UPDATE: キャッシュvs節税 ① =====
-  setText('s1-income',   '+' + fmt(income_annual));
-  setText('s1-income-m', '+' + fmt(rental));
-  setText('s1-mgmt',     '−' + fmt(mgmt_annual));
-  setText('s1-mgmt-m',   '−' + fmt(management));
-  setText('s1-loan',     '−' + fmt(loan_annual));
-  setText('s1-loan-m',   '−' + fmt(loan));
-  setText('s1-ptax',     '−' + fmt(property_tax));
-  setText('s1-ptax-m',   '−' + fmt(Math.round(property_tax / 12)));
-  setText('s1-total',    fmtSign(cashout_annual));
-  setText('s1-total-m',  fmtSign(Math.round(cashout_annual / 12)));
-
-  // ===== UPDATE: キャッシュvs節税 ② =====
-  setText('s2-income',      '+' + fmt(income_annual));
-  setText('s2-income-m',    '+' + fmt(rental));
-  setText('s2-mgmt',        '−' + fmt(mgmt_annual));
-  setText('s2-mgmt-m',      '−' + fmt(management));
-  setText('s2-interest',    '−' + fmt(Math.round(loan_interest_annual)));
-  setText('s2-interest-m',  '−' + fmt(Math.round(loan_interest_annual / 12)));
-  setText('s2-ptax',        '−' + fmt(property_tax));
-  setText('s2-ptax-m',      '−' + fmt(Math.round(property_tax / 12)));
-  setText('s2-dep',         '−' + fmt(depreciation));
-  setText('s2-dep-m',       '−' + fmt(Math.round(depreciation / 12)));
-  setText('s2-re-income',   fmtSign(Math.round(re_income)));
-  setText('s2-re-income-m', fmtSign(Math.round(re_income / 12)));
-  setText('s2-tax',         fmtSign(-Math.round(income_tax)));
-  setText('s2-tax-m',       fmtSign(-Math.round(income_tax / 12)));
-  setText('s2-taxrate-disp', Math.round(tax_rate * 100));
-  const sign2 = re_income >= 0 ? '納税' : '還付';
-  setText('s2-formula',
-    `= ${fmt(Math.round(re_income))} × ${Math.round(tax_rate*100)}% = ${fmt(Math.abs(Math.round(income_tax)))}円（${sign2}）`);
-
-  // ===== UPDATE: キャッシュvs節税 ③ =====
-  setText('s3-dep',    fmt(depreciation));
-  setText('s3-dep-m',  fmt(Math.round(depreciation / 12)));
-  setText('s3-rate',   Math.round(tax_rate * 100) + '%');
-  setText('s3-saving', '+' + fmt(Math.round(dep_saving)));
-  setText('s3-saving-m', '+' + fmt(Math.round(dep_saving / 12)));
-  setText('s3-formula',
-    `= ${fmt(depreciation)} × ${Math.round(tax_rate*100)}% = ${fmt(Math.round(dep_saving))}円/年（${fmt(Math.round(dep_saving/12))}円/月）`);
-
-  // ===== SIMULATION =====
-  buildSimulation(rentals, management, loan, loan_annual, property_tax, depreciation, tax_rate, initial_inv, years, rate, debt);
-
-  // ===== EXIT SCENARIO =====
-  buildExitScenario(exit_market, exit_challenge, debt, lawyer_fee, prepay_fee, cancel_fee);
-}
-
-// ===== BUILD SIMULATION TABLE =====
-// シミュレーション期間 = ローン残年数（自動連動）
-// 空室損失 = 東京以外：4年に1度、空室1.5ヶ月+広告1.5ヶ月+仲介1ヶ月=4ヶ月分をまとめて計上
-function buildSimulation(rentals, management, loan, loan_annual, property_tax, depreciation, tax_rate, initial_inv, loanYears, rate, debt) {
-  const SIM_YEARS = Math.max(loanYears, 1);
-  const MAX_SEARCH = 100; // 累計収支プラス転換年の最大模索期間（シミュレーション表示期間とは独立）
-  const mgmt_base = management;
-  let cumulative = -initial_inv;
-  let plusYear = null;
-  let at_completion = null;
-  let tbody = '';
-
-  for (let y = 1; y <= Math.max(SIM_YEARS, MAX_SEARCH); y++) {
-    // その年の賃料（5年ごとのステップ）
-    const period = Math.min(Math.floor((y - 1) / 5), rentals.length - 1);
-    const r = rentals[period] || rentals[rentals.length - 1];
-
-    // 管理費は年0.5%上昇
-    const mgmt = Math.round(mgmt_base * 12 * Math.pow(1.005, y - 1));
-
-    // ローン（完済後はゼロ）
-    const loan_y = y <= loanYears ? loan_annual : 0;
-
-    // 空室損失：4年に1度まとめて計上（東京以外：空室1.5+広告1.5+仲介1=4ヶ月分）
-    const vacancy_loss = (y % 4 === 0) ? Math.round(r * 4) : 0;
-
-    // 臨時費用（特定年の設備交換）
-    let maint = 0;
-    if (SPECIAL_MAINT[y]) {
-      maint = SPECIAL_MAINT[y];
-    }
-    // 退去リフォームは空室損失に含まれるため別途計上しない
-
-    // 年間家賃収入（空室損失は別途計上）
-    const income_y = r * 12;
-
-    // ローン利息（残債×金利、完済後はゼロ）
-    const remaining_debt = y <= loanYears
-      ? debt * 10000 * Math.max(0, 1 - (y / loanYears))
-      : 0;
-    const interest_y = remaining_debt * (rate / 100);
-
-    // 不動産所得・税効果
-    const re_income_y = income_y - mgmt - interest_y - property_tax - depreciation;
-    const tax_effect = -(re_income_y * tax_rate);
-
-    // 年間収支
-    const annual = income_y - mgmt - loan_y - property_tax - maint - vacancy_loss + tax_effect;
-    cumulative += annual;
-
-    if (plusYear === null && cumulative >= 0) plusYear = y;
-    if (y === loanYears) at_completion = cumulative;
-
-    // シミュレーション表示期間内のみテーブル行を追加
-    if (y <= SIM_YEARS) {
-      // 行スタイル
-      let rowClass = '';
-      if (y === loanYears) rowClass = 'completed';
-      else if (y % 5 === 0) rowClass = 'milestone';
-
-      const cfClass  = annual >= 0 ? 'td-pos' : 'td-neg';
-      const cumClass = cumulative >= 0 ? 'td-pos' : 'td-neg';
-
-      tbody += `<tr class="${rowClass}">
-        <td>${y}年${y === loanYears ? ' 🏁' : ''}</td>
-        <td>${fmt(r)}円</td>
-        <td>${fmt(income_y)}円</td>
-        <td>${fmt(mgmt)}円</td>
-        <td>${y <= loanYears ? fmt(loan_y) + '円' : '<span class="badge badge-green">完済</span>'}</td>
-        <td class="${vacancy_loss > 0 ? 'td-warn' : ''}">${vacancy_loss > 0 ? fmt(vacancy_loss) + '円' : '—'}</td>
-        <td class="${maint > 0 ? 'td-warn' : ''}">${maint > 0 ? fmt(maint) + '円' : '—'}</td>
-        <td class="${tax_effect >= 0 ? 'td-pos' : 'td-neg'}">${fmtSign(Math.round(tax_effect))}円</td>
-        <td class="${cfClass}">${fmtSign(Math.round(annual))}円</td>
-        <td class="${cumClass}">${fmtSign(Math.round(cumulative))}円</td>
-      </tr>`;
-    }
-
-    // 累計収支プラス転換年を見つけたら、シミュレーション期間も超えた場合はループ終了
-    if (plusYear !== null && y >= SIM_YEARS) break;
-  }
-
-  const tbody_el = $('sim-tbody');
-  if (tbody_el) tbody_el.innerHTML = tbody;
-
-  // KPI更新
-  setText('sim-loan-years', loanYears + '年');
-  setText('sim-period', SIM_YEARS + '年');
-  setText('sim-at-completion', at_completion !== null ? fmtSign(Math.round(at_completion)) + '円' : '—');
-
-  const plusText = plusYear
-    ? (plusYear > loanYears
-        ? plusYear + '年目（完済' + loanYears + '年後の' + (plusYear - loanYears) + '年後）'
-        : plusYear + '年目（完済前）')
-    : '100年以内にプラス転換なし';
-  setText('sim-plus-year', plusText);
-
-  // サマリーテキスト（入力値連動で自動更新）
-  const initMan = Math.round(initial_inv / 10000);
-  setText('sim-summary-text',
-    `初期投資${fmt(initMan)}万円を回収するには、現在の収支では${plusText}かかる見込みです。`);
-
-  // ローン完済後分析
-  buildPostLoanAnalysis(rentals, mgmt_base, property_tax, loanYears, at_completion);
-}
-
-function buildPostLoanAnalysis(rentals, mgmt_base, property_tax, loanYears, at_completion) {
-  const period = Math.min(Math.floor(loanYears / 5), rentals.length - 1);
-  const r_post = rentals[period] || rentals[rentals.length - 1];
-  const mgmt_post = Math.round(mgmt_base * 12 * Math.pow(1.005, loanYears));
-  const annual_post = r_post * 12 - mgmt_post - property_tax;
-  const monthly_post = Math.round(annual_post / 12);
-
-  const html = `
-    <div class="formula-box">
-      <div class="formula-box-title">📐 ローン完済後（${loanYears}年後）の収支</div>
-      <div class="formula-line">完済後の月額賃料（推定）: ${fmt(r_post)}円/月</div>
-      <div class="formula-line">完済後の年間純収入 = 年間家賃 − 管理費 − 固定資産税</div>
-      <div class="formula-line">= ${fmt(r_post * 12)} − ${fmt(mgmt_post)} − ${fmt(property_tax)}</div>
-      <div class="formula-result">= ${fmtSign(annual_post)}円/年（月換算: ${fmtSign(monthly_post)}円/月）</div>
-    </div>
-    <div class="notice-box ${annual_post >= 0 ? 'success' : 'warning'}" style="margin-top:10px;">
-      <span class="notice-icon">${annual_post >= 0 ? '✅' : '⚠️'}</span>
-      <div>ローン完済後は月間<strong>${fmtSign(monthly_post)}円</strong>のキャッシュフローが期待できます。
-      完済時点の累計収支は<strong>${at_completion !== null ? fmtSign(Math.round(at_completion)) + '円' : '計算中'}</strong>です。</div>
-    </div>
-  `;
-  const el = $('post-loan-analysis');
-  if (el) el.innerHTML = html;
-}
-
-// ===== EXIT SCENARIO =====
-function buildExitScenario(market, challenge, debt, lawyer, prepay, cancel) {
-  const debt_yen = debt * 10000;
-  const other = lawyer + prepay + cancel;
-
-  const scenarios = [
-    { label: '① 相場価格', price: market },
-    { label: '② チャレンジ価格', price: challenge }
-  ];
-
-  let rows = '';
-  scenarios.forEach(s => {
-    const commission = Math.round((s.price * 0.03 + 60000) * 1.1);
-    const remaining = s.price - commission - other - debt_yen;
-    const cls = remaining >= 0 ? 'td-positive' : 'td-negative';
-    rows += `<tr>
-      <td>${s.label}</td>
-      <td>${fmt(Math.round(s.price / 10000))}万円</td>
-      <td class="td-expense">−${fmt(Math.round(commission / 10000))}万円</td>
-      <td class="td-expense">−${fmt(Math.round(other / 10000))}万円</td>
-      <td class="td-expense">−${fmt(Math.round(debt_yen / 10000))}万円</td>
-      <td class="${cls}"><strong>${fmtSign(Math.round(remaining / 10000))}万円</strong></td>
-    </tr>`;
-  });
-
-  const tbody = $('exit-tbody');
-  if (tbody) tbody.innerHTML = rows;
-}
-
-// ===== EVENT LISTENERS =====
-document.querySelectorAll('input, textarea').forEach(el => {
-  el.addEventListener('input', recalcAll);
-});
-
-$('btn-save')?.addEventListener('click', saveData);
-$('btn-save-form')?.addEventListener('click', saveData);
-$('btn-clear-form')?.addEventListener('click', clearData);
-$('btn-print')?.addEventListener('click', () => window.print());
-$('btn-goto-overview')?.addEventListener('click', () => {
-  document.querySelector('[data-tab="overview"]')?.click();
-});
-
-document.addEventListener('keydown', e => {
-  if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveData(); }
-  if ((e.ctrlKey || e.metaKey) && e.key === 'p') { e.preventDefault(); window.print(); }
-});
-
-// ===== AI SETTINGS PANEL TOGGLE =====
-$('btn-ai-settings')?.addEventListener('click', () => {
-  const panel = $('ai-settings-panel');
-  panel?.classList.toggle('open');
-  // APIキーをlocalStorageから復元
-  const saved = localStorage.getItem('ai_api_key');
-  if (saved && $('ai-api-key')) $('ai-api-key').value = saved;
-});
-$('ai-api-key')?.addEventListener('change', () => {
-  const v = $('ai-api-key').value.trim();
-  if (v) localStorage.setItem('ai_api_key', v);
-});
-
-// ===== CUSTOMER MODE TOGGLE =====
-let clientMode = false;
-$('btn-client-mode')?.addEventListener('click', () => {
-  clientMode = !clientMode;
-  document.body.classList.toggle('client-mode', clientMode);
-  $('btn-client-mode').textContent = clientMode ? '🔓 編集モードに戻る' : '👤 顧客開示';
-  if (clientMode) {
-    // 顧客開示モード: 物件概要タブに切り替え
-    document.querySelector('[data-tab="overview"]')?.click();
-    showToast('👤 顧客開示モードに切り替えました');
-  } else {
-    showToast('🔓 編集モードに戻りました');
-  }
-});
-
-// ===== AI UPDATE FUNCTION =====
-
-// AI更新の中核関数（手動・自動共通）
-// Manus AI APIの設定（環境変数から自動取得済み）
-const MANUS_API_BASE = 'https://api.manus.im/api/llm-proxy/v1';
-const MANUS_API_KEY  = 'sk-9TriwFDFm2cpeA6ab5oSwU'; // ビルド時に自動埋め込み
-
-async function callManusAI(prompt, model) {
-  const resp = await fetch(MANUS_API_BASE + '/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + MANUS_API_KEY
-    },
-    body: JSON.stringify({
-      model: model || 'gpt-4.1-mini',
-      messages: [{ role: 'user', content: prompt }],
-      max_tokens: 4000
-    })
-  });
-  if (!resp.ok) {
-    const err = await resp.json().catch(() => ({}));
-    throw new Error(err.error?.message || resp.statusText);
-  }
-  const data = await resp.json();
-  return data.choices?.[0]?.message?.content || '';
-}
-
-async function callManusAIWithImage(prompt, imageB64, mimeType, model) {
-  const resp = await fetch(MANUS_API_BASE + '/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + MANUS_API_KEY
-    },
-    body: JSON.stringify({
-      model: model || 'gpt-4.1-mini',
-      messages: [{
-        role: 'user',
-        content: [
-          { type: 'image_url', image_url: { url: `data:${mimeType};base64,${imageB64}` } },
-          { type: 'text', text: prompt }
-        ]
-      }],
-      max_tokens: 4000
-    })
-  });
-  if (!resp.ok) {
-    const err = await resp.json().catch(() => ({}));
-    throw new Error(err.error?.message || resp.statusText);
-  }
-  const data = await resp.json();
-  return data.choices?.[0]?.message?.content || '';
-}
-
-async function runAIUpdate(isAuto = false) {
-
-  // 既に更新中なら重複実行しない
-  if (runAIUpdate._running) return;
-  runAIUpdate._running = true;
-
-  const btn  = $('btn-ai-update');
-  const spin = $('ai-spin');
-  const autoIndicator = $('ai-auto-indicator');
-
-  btn.disabled = true;
-  if (spin) spin.style.display = 'inline-block';
-  if (autoIndicator) autoIndicator.style.display = 'inline-flex';
-
-  if (isAuto) {
-    showToast('🔄 入力変更を検知 — AIが自動更新中...', 10000);
-  } else {
-    showToast('🤖 AIが分析中です...しばらくお待ちください', 15000);
-  }
-
-  // 入力フォームから情報収集
-  const propName     = getText('prop_name');
-  const propLocation = getText('prop_location');
-  const propStation  = getText('prop_station');
-  const propAge      = getVal('prop_age');
-  const propArea     = getVal('prop_area');
-  const propStructure= getText('prop_structure');
-  const rental       = getVal('rental');
-  const debt         = getVal('debt');
-  const exitMarket   = getVal('exit_market_price');
-  const rentals      = [0,1,2,3,4,5].map(i => getVal('rental_' + i));
-
-  const prompt = `あなたは不動産投資の専門家です。以下の物件情報をもとに、3つのセクションのHTMLを生成してください。
-
-【重要】以下の数値は最新の入力値です。アピールポイントの本文中に必ずこの数値を使用してください。古い数値や推測値は使わないでください。
-
-【物件情報（最新値）】
-- 物件名: ${propName}
-- 所在地: ${propLocation}
-- 最寄駅・徒歩: ${propStation}
-- 築年数: ${propAge}年（必ずこの年数を使用）
-- 専有面積: ${propArea}㎡（必ずこの面積を使用）
-- 構造: ${propStructure}（必ずこの構造を使用）
-- 現在賃料: ${rental.toLocaleString()}円/月
-- ローン残債: ${debt}万円
-- 適正売却価格: ${exitMarket}万円
-- 賃料推移（5年ごと）: ${rentals.map((r,i)=>'第'+(i+1)+'期'+r.toLocaleString()+'円').join('、')}
-
-【出力形式】
-以下の3つのセクションをJSONで返してください。HTMLタグを含めて返してください。
+/* ─── SYSTEM PROMPTS ─── */
+const SYS_EXTRACT=`あなたは不動産マイソク（販売図面）専門のデータ抽出AIです。
+与えられた情報（テキスト・画像・PDF）から物件情報を抽出し、以下のJSONで返してください。
+数値は単位なしの数字のみ。不明な項目はnull。必ずJSONのみ返答（説明文・バッククォート不要）。
 {
-  "building_appeal": "<div class=\"appeal-grid\">...建物・部屋のアピールポイント（✅ポジティブ4〜6項目）とマイナスポイント（⚠️3〜4項目）をappeal-card positive/negativeのdivで...</div>",
-  "station_appeal": "<div class=\"appeal-grid\">...最寄り駅のアピールポイント（✅4〜6項目）とマイナスポイント（⚠️3〜4項目）...</div>",
-  "market_summary": "<div class=\"notice-box success\">...市場環境の概況...</div><div style=\"margin-top:14px;\"><table class=\"data-table\">...評価テーブル（評価項目・現状・評価・コメント）...</table></div><div class=\"notice-box warning\" style=\"margin-top:14px;\">...総合判断...</div>"
-}
-
-appeal-itemのHTMLは以下の形式で: <div class="appeal-item"><span class="appeal-item-dot">●</span><span><strong>タイトル</strong>：説明文</span></div>
-badgeクラスは badge-green / badge-gold / badge-blue を使用。
-JSONのみを返し、余分なテキストは不要です。`;
-
-  try {
-    const model = $('ai-model')?.value || 'gpt-4.1-mini';
-    const text = await callManusAI(prompt, model);
-
-    // JSONパース（コードブロック除去）
-    const jsonStr = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-    const result = JSON.parse(jsonStr);
-
-    // DOMに反映
-    if (result.building_appeal) {
-      const el = $('building-appeal-container');
-      if (el) el.innerHTML = result.building_appeal;
-    }
-    if (result.station_appeal) {
-      const el = $('station-appeal-container');
-      if (el) el.innerHTML = result.station_appeal;
-    }
-    if (result.market_summary) {
-      const el = $('market-summary-container');
-      if (el) el.innerHTML = result.market_summary;
-    }
-
-    const msg = isAuto
-      ? '✅ AI自動更新が完了しました（物件概要タブに反映）'
-      : '✅ AIによる再生成が完了しました！物件概要タブを確認してください';
-    showToast(msg, 5000);
-
-  } catch (e) {
-    console.error(e);
-    if (!isAuto) showToast('❌ AI更新エラー: ' + e.message, 6000);
-  } finally {
-    runAIUpdate._running = false;
-    btn.disabled = false;
-    if (spin) spin.style.display = 'none';
-    if (autoIndicator) autoIndicator.style.display = 'none';
-  }
-}
-runAIUpdate._running = false;
-
-// 手動ボタン
-$('btn-ai-update')?.addEventListener('click', () => runAIUpdate(false));
-
-// ===== AI 自動更新（debounce） =====
-// 対象フィールドID一覧（変更を監視するフィールド）
-const AI_WATCH_FIELDS = [
-  'prop_name', 'prop_location', 'prop_station', 'prop_age', 'prop_area', 'prop_structure',
-  'rental', 'debt', 'exit_market_price', 'exit_challenge_price',
-  'rental_0', 'rental_1', 'rental_2', 'rental_3', 'rental_4', 'rental_5'
-];
-
-let aiAutoTimer = null;
-const AI_DEBOUNCE_MS = 3000; // 入力が止まってから3秒後に自動更新
-
-function scheduleAIAutoUpdate() {
-  // Manus AI直接接続のため常に有効
-
-  // 既存タイマーをキャンセルして再スケジュール
-  if (aiAutoTimer) clearTimeout(aiAutoTimer);
-
-  // カウントダウンインジケーターを表示
-  const autoIndicator = $('ai-auto-indicator');
-  if (autoIndicator) {
-    autoIndicator.style.display = 'inline-flex';
-    autoIndicator.title = `${AI_DEBOUNCE_MS / 1000}秒後にAI自動更新します`;
-  }
-
-  aiAutoTimer = setTimeout(async () => {
-    aiAutoTimer = null;
-    await runAIUpdate(true);
-  }, AI_DEBOUNCE_MS);
-}
-
-// 対象フィールドにイベントリスナーを設定
-AI_WATCH_FIELDS.forEach(id => {
-  const el = document.getElementById(id);
-  if (!el) return;
-  // input: リアルタイム変更検知、change: select/blur時
-  el.addEventListener('input',  scheduleAIAutoUpdate);
-  el.addEventListener('change', scheduleAIAutoUpdate);
-});
-
-// ===== EXCEL (MAISOKU) EXPORT =====
-$('btn-excel')?.addEventListener('click', exportMaisokuExcel);
-
-async function exportMaisokuExcel() {
-  const btn = $('btn-excel');
-  btn.disabled = true;
-  btn.textContent = '⏳ 生成中...';
-  showToast('📊 マイソクExcelを生成中です...', 5000);
-
-  try {
-    const propName     = getText('prop_name') || 'エスリード江坂垂水 707号室';
-    const propLocation = getText('prop_location') || '大阪府吹田市垂水町3丁目5-8';
-    const propStation  = getText('prop_station') || '江坂駅 徒歩10分';
-    const propArea     = getVal('maisoku_area') || getVal('prop_area') || 55.25;
-    const propStructure= getText('prop_structure') || 'RC造';
-    const price        = getVal('maisoku_price') || getVal('exit_market_price') || 2750;
-    const rental       = getVal('rental');
-    const management   = getVal('management');
-    const balcony      = getText('maisoku_balcony') || '－';
-    const washer       = getText('maisoku_washer') || '有';
-    const landRights   = getText('maisoku_landrights') || '所有権';
-    const totalUnitsRaw= getText('maisoku_totalunits') || '62';
-    const totalUnits   = totalUnitsRaw.match(/^\d+/)?.[0] || totalUnitsRaw.replace(/[^0-9]/g,'').substring(0,3);
-    const floor        = getText('maisoku_floor') || '7';
-    const builtDate    = getText('maisoku_builtdate') || '2014年1月';
-    const mgmtCo       = getText('maisoku_mgmtco') || 'エスリード管理';
-    const status       = getText('maisoku_status') || '賃貸中';
-    const delivery     = getText('maisoku_delivery') || '要相談';
-    const otherFee     = getVal('maisoku_otherfee') || 0;
-    const notes        = document.getElementById('maisoku_notes')?.value || '';
-    const mgmtFeeNum   = getVal('maisoku_mgmtfee') || Math.round(management * 0.636);
-    const repairFund   = getVal('maisoku_repairfund') || (management - mgmtFeeNum);
-    const companyName  = getText('maisoku_company') || '株式会社GRエステート';
-    const licenseNo    = getText('maisoku_license') || '国土交通大臣（1）第９９２１号';
-    const address      = getText('maisoku_address') || '〒141-0022　東京都品川区東五反田1-16-11-4階';
-    const tel          = getText('maisoku_tel') || '03-6432-5088';
-    const fax          = getText('maisoku_fax') || '03-6432-5087';
-    const staff        = getText('maisoku_staff') || '野村';
-    const dealType     = getText('maisoku_dealtype') || '媒介';
-    const commission   = getText('maisoku_commission') || '分かれ';
-
-    const payload = {
-      prop_name: propName, prop_location: propLocation, prop_station: propStation,
-      prop_area: propArea, prop_structure: propStructure, price: price,
-      rental: rental, management: management, balcony: balcony, washer: washer,
-      land_rights: landRights, total_units: totalUnits, floor: floor,
-      built_date: builtDate, mgmt_co: mgmtCo, status: status, delivery: delivery,
-      other_fee: otherFee, notes: notes, mgmt_fee: mgmtFeeNum, repair_fund: repairFund,
-      company_name: companyName, license_no: licenseNo, address: address,
-      tel: tel, fax: fax, staff: staff, deal_type: dealType, commission: commission
-    };
-
-    const SERVER_URL = '';
-    const resp = await fetch(SERVER_URL + '/generate-maisoku', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    if (!resp.ok) {
-      const err = await resp.text();
-      throw new Error('サーバーエラー: ' + err);
-    }
-
-    const blob = await resp.blob();
-    const today = new Date();
-    const dateStr = today.getFullYear() + String(today.getMonth()+1).padStart(2,'0') + String(today.getDate()).padStart(2,'0');
-    const fileName = `${propName}_マイソク_${dateStr}.xlsx`;
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = fileName; a.click();
-    URL.revokeObjectURL(url);
-    showToast('✅ マイソクExcelをダウンロードしました', 4000);
-
-  } catch(e) {
-    console.error(e);
-    showToast('❌ Excel生成エラー: ' + e.message + '\n\n※ maisoku_server.py が起動しているか確認してください', 8000);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = '📥 マイソクExcel';
-  }
-}
-
-// ===== INIT =====
-loadData();
-recalcAll();
-
-// APIキー復元
-const savedKey = localStorage.getItem('ai_api_key');
-if (savedKey && $('ai-api-key')) $('ai-api-key').value = savedKey;
-
-// ===== 販売図面読み取り機能 =====
-
-// アップロード済みファイル一覧
-let maisokuUploadedFiles = [];
-
-// タブ切り替え
-function switchMaisokuTab(tab) {
-  document.querySelectorAll('.maisoku-tab').forEach(t => {
-    t.classList.toggle('active', t.dataset.mtab === tab);
-  });
-  ['text', 'file', 'excel'].forEach(id => {
-    const el = document.getElementById('maisoku-panel-' + id);
-    if (el) el.style.display = id === tab ? 'block' : 'none';
-  });
-}
-
-// ドラッグ&ドロップ
-function maisokuDragOver(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
-function maisokuDragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
-function maisokuDrop(e) {
-  e.preventDefault(); e.currentTarget.classList.remove('drag-over');
-  processMaisokuFiles([...e.dataTransfer.files]);
-}
-function maisokuHandleFiles(e) { processMaisokuFiles([...e.target.files]); }
-
-function processMaisokuFiles(files) {
-  const grid = document.getElementById('maisoku-preview-grid');
-  for (const f of files) {
-    const ok = f.type.startsWith('image/') || f.type === 'application/pdf';
-    if (!ok) { showToast('⚠️ 画像またはPDFファイルを選択してください', 3000); continue; }
-    const reader = new FileReader();
-    reader.onload = ev => {
-      const b64 = ev.target.result.split(',')[1];
-      const fobj = { name: f.name, type: f.type, b64 };
-      const idx = maisokuUploadedFiles.push(fobj) - 1;
-      const item = document.createElement('div');
-      item.className = 'maisoku-preview-item';
-      if (f.type.startsWith('image/')) {
-        item.innerHTML = `<img src="${ev.target.result}" alt="${f.name}"><button class="rm-btn" onclick="removeMaisokuFile(${idx})">&#x2715;</button>`;
-      } else {
-        item.innerHTML = `<div class="pdf-icon">📄</div><button class="rm-btn" onclick="removeMaisokuFile(${idx})">&#x2715;</button>`;
-      }
-      const lbl = document.createElement('div');
-      lbl.className = 'fname'; lbl.textContent = f.name;
-      item.appendChild(lbl); grid.appendChild(item);
-    };
-    reader.readAsDataURL(f);
-  }
-}
-
-function removeMaisokuFile(i) {
-  maisokuUploadedFiles.splice(i, 1);
-  const grid = document.getElementById('maisoku-preview-grid');
-  grid.innerHTML = '';
-  maisokuUploadedFiles.forEach((f, j) => {
-    const item = document.createElement('div');
-    item.className = 'maisoku-preview-item';
-    if (f.type.startsWith('image/')) {
-      item.innerHTML = `<img src="data:${f.type};base64,${f.b64}"><button class="rm-btn" onclick="removeMaisokuFile(${j})">&#x2715;</button>`;
-    } else {
-      item.innerHTML = `<div class="pdf-icon">📄</div><button class="rm-btn" onclick="removeMaisokuFile(${j})">&#x2715;</button>`;
-    }
-    const lbl = document.createElement('div'); lbl.className = 'fname'; lbl.textContent = f.name;
-    item.appendChild(lbl); grid.appendChild(item);
-  });
-}
-
-function clearMaisokuFiles() {
-  maisokuUploadedFiles = [];
-  document.getElementById('maisoku-preview-grid').innerHTML = '';
-  const prev = document.getElementById('maisoku-file-preview');
-  if (prev) { prev.style.display = 'none'; prev.textContent = ''; }
-}
-
-function clearMaisokuText() {
-  const ta = document.getElementById('maisoku-raw-text');
-  if (ta) ta.value = '';
-  const prev = document.getElementById('maisoku-text-preview');
-  if (prev) { prev.style.display = 'none'; prev.textContent = ''; }
-}
-
-// Excel読み取り
-function maisokuExcelDrop(e) {
-  e.preventDefault(); e.currentTarget.classList.remove('drag-over');
-  const files = [...e.dataTransfer.files].filter(f => f.name.match(/\.xlsx?$/i));
-  if (files.length) readMaisokuExcel(files[0]);
-  else showToast('⚠️ .xlsxまたは.xlsファイルを選択してください', 3000);
-}
-function maisokuExcelRead(e) {
-  const f = e.target.files[0];
-  if (f) readMaisokuExcel(f);
-}
-
-function readMaisokuExcel(file) {
-  const prev = document.getElementById('maisoku-excel-preview');
-  const reader = new FileReader();
-  reader.onload = ev => {
-    try {
-      const data = new Uint8Array(ev.target.result);
-      const wb = XLSX.read(data, { type: 'array' });
-      const ws = wb.Sheets[wb.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
-
-      // セル内容をフラットなテキストに変換して解析
-      const allText = rows.map(r => r.join('\t')).join('\n');
-      const obj = parseMaisokuTextLocal(allText);
-
-      // プレビュー表示
-      if (prev) {
-        prev.style.display = 'block';
-        prev.textContent = 'Excel読み取り結果:\n' + JSON.stringify(obj, null, 2);
-      }
-
-      applyMaisokuResult(obj);
-      showToast('✅ Excelから物件情報を読み込みました', 4000);
-    } catch (e) {
-      console.error(e);
-      showToast('❌ Excel読み取りエラー: ' + e.message, 5000);
-    }
-  };
-  reader.readAsArrayBuffer(file);
-}
-
-// ===== 正規表現解析 =====
-function parseMaisokuLocal() {
-  const txt = document.getElementById('maisoku-raw-text')?.value || '';
-  if (!txt.trim()) { showToast('⚠️ テキストを入力してください', 3000); return; }
-  const obj = parseMaisokuTextLocal(txt);
-  const prev = document.getElementById('maisoku-text-preview');
-  if (prev) {
-    prev.style.display = 'block';
-    prev.textContent = '正規表現解析結果:\n' + JSON.stringify(obj, null, 2);
-  }
-  applyMaisokuResult(obj);
-  showToast('✅ 正規表現解析完了。フォームに反映しました', 4000);
-}
-
-function parseMaisokuTextLocal(raw) {
-  const txt = raw.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-  const lines = txt.split('\n').map(l => l.trim()).filter(l => l);
-  const R = {
-    name: '', floor: '', roomNo: '', area: '', price: '', address: '', transport: '',
-    structure: '', totalFloors: '', totalUnits: '', builtDate: '', mgmtCo: '',
-    landrights: '所有権', rent: '', mgmtFee: '', repairFund: '', otherFee: '',
-    feesTotal: '', status: '賃貸中', delivery: '応相談', notes: ''
-  };
-  const num = s => s ? (s + '').replace(/[^0-9.]/g, '') : '';
-  const first = pats => { for (const p of pats) { const m = txt.match(p); if (m) return (m[1] || '').trim(); } return ''; };
-
-  R.name = first([/物件名\s*[::：]\s*([^\n]+)/, /マンション名\s*[::：]\s*([^\n]+)/]);
-  const rn = txt.match(/(\d{3,4})\s*号室/);
-  if (rn) { R.roomNo = rn[1]; R.floor = rn[1].length === 3 ? rn[1][0] : rn[1].slice(0, 2); }
-  if (!R.floor) { const f = txt.match(/(\d+)\s*階(?:部分)?/); if (f) R.floor = f[1]; }
-  R.area = num(first([/専有面積\s*[::：]?\s*([\d.]+)/, /平米\s*[::：]?\s*([\d.]+)/, /([\d.]+)\s*㎡/]));
-  R.rent = num(first([/(?:家賃|賃料|サブリース賃料)\s*[::：]?\s*([\d,，]+)/, /([\d,]+)\s*円\/月/]));
-  const kt = first([/管積\s*[::：]?\s*([\d,，]+)/, /管理費[・・]修繕(?:積立金|費)\s*[::：]?\s*([\d,，]+)/]);
-  if (kt) R.feesTotal = num(kt);
-  if (!R.feesTotal) R.mgmtFee = num(first([/管理費\s*[::：]?\s*([\d,，]+)/]));
-  if (!R.feesTotal) R.repairFund = num(first([/修繕(?:積立金|費)\s*[::：]?\s*([\d,，]+)/]));
-  R.address = first([/(?:所在地|住所)\s*[::：]?\s*([^\n]+)/]);
-  if (!R.address) { const am = txt.match(/([^　\s]+[都道府県][^\n]{4,})/); if (am) R.address = am[1].trim(); }
-  R.transport = first([/(?:交通|アクセス)\s*[::：]?\s*([^\n]+)/, /(.+(?:駅|線).+徒歩\d+分)/]);
-  R.structure = first([/構造\s*[::：]?\s*([^\n]+)/, /(鱄筋コンクリート造|RC造|鱄骨造|木造|SRC造)/]).replace(/地上.*/,'').trim();
-  const tf = txt.match(/地上\s*(\d+)\s*階建/); if (tf) R.totalFloors = tf[1];
-  R.totalUnits = num(first([/総戸数\s*[::：]?\s*([\d,]+)\s*戸/, /全\s*([\d,]+)\s*戸/]));
-  R.builtDate = first([/築年月?\s*[::：]?\s*([^\n]+)/, /競工\s*[::：]?\s*([^\n]+)/, /(\d{4}年\d+月)/]);
-  R.mgmtCo = first([/管理会社\s*[::：]?\s*([^\n]+)/, /サブリース会社\s*[::：]?\s*([^\n]+)/]);
-  R.price = num(first([/(?:販売)?価格\s*[::：]?\s*([\d,，]+)\s*万円/]));
-  if (!R.name && lines.length > 0) {
-    for (const l of lines) {
-      if (/円|㎡|年|月|駅|号室/.test(l) && l.length < 8) continue;
-      if (/^[\d]/.test(l)) continue;
-      if (/[都道府県]/.test(l) && l.length > 8) continue;
-      const nm = l.replace(/\s*\d{3,4}号室.*/,'').replace(/\s+\d+階.*/,'').trim();
-      if (nm.length > 2) { R.name = nm; break; }
-    }
-  }
-  return R;
-}
-
-// ===== AI解析 =====
-const MAISOKU_SYSTEM_PROMPT = `あなたは日本の不動産投資物件情報の解析専門家です。提供されたテキスト・画像・PDFから物件情報を正確に抽出し、以下のJSON形式のみで回答してください（他のテキスト・マークダウン記法・コードブロックは不要）。
-
-重要なルール：
-- 「管積」= 管理費+修繕積立金の合計 → feesTotalに入れる
-- 「サブリース賃料」「家賃」「賃料」 = rent
-- 「平米数」「専有面積」 = area（数値のみ）
-- 号室→階の推定: 501→5階, 405→4階, 207→2階, 1205→12階
-- 数値は円記号・カンマを除いた数字のみ
-- 不明な項目は空文字
-
-{
-  "name": "物件名",
-  "floor": "階数（数字のみ）",
-  "roomNo": "号室番号（3〜4桁）",
-  "area": "専有面積（数値のみ）",
-  "price": "販売価格（万円、数値のみ）",
-  "address": "所在地",
-  "transport": "交通アクセス",
-  "structure": "構造",
-  "totalFloors": "地上階数（数値のみ）",
-  "totalUnits": "総戸数（数値のみ）",
-  "builtDate": "築年月",
-  "mgmtCo": "管理会社名",
-  "landrights": "土地権利",
-  "rent": "賃料（数値のみ、円）",
-  "mgmtFee": "管理費（数値のみ、円）",
-  "repairFund": "修繕積立金（数値のみ、円）",
-  "otherFee": "その他費用（数値のみ、円）",
-  "feesTotal": "管理費等合計（内訳不明または管積合計のみの場合）",
-  "status": "現況",
-  "delivery": "引渡",
-  "notes": "備考"
+  "name":"物件名・号室","address":"所在地","station":"最寄駅と徒歩分",
+  "builtDate":"築年月（例：2014年1月）","builtYear":築年数(数値),
+  "structure":"構造","area":専有面積(数値),"balcony":バルコニー面積(数値),
+  "floor":"階数","totalUnits":"総戸数",
+  "landRight":"土地権利","laundry":"洗濯機置場",
+  "rent":賃料(円/数値),"managementFee":管理費(円/数値),"repairFund":修繕積立金(円/数値),
+  "otherFee":その他費用(円/数値),"managementCompany":"管理会社名",
+  "currentStatus":"現況","deliveryDate":"引渡日",
+  "askingPrice":希望価格(万円/数値),
+  "sublease":"サブリース情報","notes":"備考"
 }`;
 
-async function parseMaisokuWithAI(mode) {
-  const spinId  = mode === 'text' ? 'spin-maisoku-text' : 'spin-maisoku-file';
-  const btnId   = mode === 'text' ? 'btn-maisoku-ai-text' : 'btn-maisoku-ai-file';
-  const prevId  = mode === 'text' ? 'maisoku-text-preview' : 'maisoku-file-preview';
-  const btn  = document.getElementById(btnId);
-  const spin = document.getElementById(spinId);
-  if (btn) btn.disabled = true;
-  if (spin) spin.style.display = 'inline-block';
-  showToast('🤖 AIが物件情報を解析中...', 15000);
+const SYS_REPORT=`あなたは超一流の日本国内不動産売買スペシャリストです。
+物件情報を総合分析し、投資家向け詳細レポートをJSONで生成してください。
+エリアの市場動向・築年数・駅距離・CF・ローン状況を踏まえ、具体的かつ実践的な分析を行ってください。
+必ずJSONのみ返答してください（説明文・バッククォート不要）。
+{
+  "marketSummary":"市場動向と物件の立ち位置（300〜400字）",
+  "positivePoints":["建物アピールポイント①","②","③","④","⑤"],
+  "negativePoints":["懸念点①","②","③"],
+  "stationPositive":["駅・エリアのプラス①","②","③"],
+  "stationNegative":["駅・エリアのマイナス①","②"],
+  "overallJudgment":"総合評価コメント（400〜500字）",
+  "holdAdvice":"保有継続の場合の所見（150字）",
+  "saleAdvice":"売却検討の場合の所見（150字）",
+  "rentTrend":{"p1":第1期賃料,"p2":第2期,"p3":第3期,"p4":第4期,"p5":第5期,"p6":第6期,"note":"根拠"},
+  "saleScenario":{"low":保守的(万円),"market":相場(万円),"high":チャレンジ(万円),"note":"根拠"},
+  "depreciation":{"amount":年間減価償却費(円),"note":"計算根拠"},
+  "propertyTax":{"amount":年間固定資産税(円),"note":"試算根拠"},
+  "cfRating":"◎良好 または ○普通 または △要注意",
+  "saleRating":"◎今が売り時 または ○どちらでも または △今は保有"
+}`;
 
-  try {
-    const model = $('ai-model')?.value || 'gpt-4.1-mini';
-    let aiText = '';
+/* ─── DEFAULT FORM ─── */
+const DEF={
+  id:"",createdAt:"",updatedAt:"",
+  name:"",address:"",station:"",builtDate:"",builtYear:"",
+  structure:"RC造",area:"",balcony:"",floor:"",totalUnits:"",
+  landRight:"所有権",laundry:"有",
+  rent:"",managementFee:"",repairFund:"",otherFee:0,
+  loanPayment:"",loanBalance:"",loanRate:"",loanRemainingYears:"",
+  monthlyInterest:"",monthlyPrincipal:"",contractDate:"",
+  propertyTax:60000,depreciation:"",taxRate:30,initialInvestment:"",
+  rentPeriods:["","","","","",""],
+  salePrice:"",salePriceHigh:"",salePriceLow:"",
+  notaryFee:50000,prepaymentFee:0,cancellationFee:0,
+  currentStatus:"",deliveryDate:"要相談",
+  managementCompany:"",askingPrice:"",
+  notes:"",sublease:"",aiReport:null,
+};
 
-    if (mode === 'text') {
-      const txt = document.getElementById('maisoku-raw-text')?.value.trim() || '';
-      if (!txt) { showToast('⚠️ テキストを入力してください', 3000); return; }
-      const fullPrompt = MAISOKU_PARSE_SYSTEM + '\n\n以下の物件情報を解析してください:\n\n' + txt;
-      aiText = await callManusAI(fullPrompt, model);
-    } else {
-      if (maisokuUploadedFiles.length === 0) { showToast('⚠️ ファイルをアップロードしてください', 3000); return; }
-      const f = maisokuUploadedFiles[0];
-      const imgPrompt = MAISOKU_PARSE_SYSTEM + '\n\n上記の画像から物件情報を解析してください。';
-      if (f.type.startsWith('image/')) {
-        aiText = await callManusAIWithImage(imgPrompt, f.b64, f.type, model);
-      } else {
-        // PDFはテキストプロンプトで対応
-        const fullPrompt = MAISOKU_PARSE_SYSTEM + '\n\n添付のPDFの内容から物件情報を解析してください。';
-        aiText = await callManusAI(fullPrompt, model);
-      }
-    }
+/* ─── STYLES ─── */
+const S={
+  card:(ex={})=>({background:"#fff",borderRadius:10,padding:20,boxShadow:"0 1px 4px rgba(0,0,0,.08)",...ex}),
+  btn:(bg,ex={})=>({background:bg,color:"#fff",border:"none",padding:"9px 18px",borderRadius:7,cursor:"pointer",fontSize:13,fontWeight:"bold",...ex}),
+  inp:(ex={})=>({width:"100%",boxSizing:"border-box",padding:"7px 10px",border:"1px solid #cdd5e0",borderRadius:6,fontSize:13,outline:"none",...ex}),
+  lbl:(ex={})=>({fontSize:11,color:"#666",marginBottom:3,display:"block",...ex}),
+  badge:(color,ex={})=>({display:"inline-block",padding:"2px 8px",borderRadius:10,fontSize:11,background:color+"22",color:color,fontWeight:"bold",...ex}),
+};
 
-    // JSONパース
-    const jsonStr = aiText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-    const obj = JSON.parse(jsonStr);
+/* ════════════════════════════════════════════
+   APP ROOT
+════════════════════════════════════════════ */
+function App(){
+  const [view,setView]=useState("list");
+  const [props,setProps]=useState([]);
+  const [selId,setSelId]=useState(null);
+  const [form,setForm]=useState({...DEF});
+  const [isEdit,setIsEdit]=useState(false);
+  const [search,setSearch]=useState("");
+  const [sortBy,setSortBy]=useState("date");
+  const [fStatus,setFStatus]=useState("all");
+  const [apiKey,setApiKey]=useState("");
+  const [apiModal,setApiModal]=useState(false);
+  const [fTab,setFTab]=useState("maisoku");
+  const [maText,setMaText]=useState("");
+  const [upFile,setUpFile]=useState(null);
+  const [aiMsg,setAiMsg]=useState("");
+  const [loading,setLoading]=useState(false);
+  const fileRef=useRef(null);
 
-    // プレビュー表示
-    const prev = document.getElementById(prevId);
-    if (prev) { prev.style.display = 'block'; prev.textContent = 'AI解析結果:\n' + JSON.stringify(obj, null, 2); }
+  useEffect(()=>{
+    const p=lsGet(S_PROPS);if(Array.isArray(p))setProps(p);
+    const k=lsGet(S_KEY);
+    if(k)setApiKey(k);else setApiModal(true);
+  },[]);
 
-    applyMaisokuResult(obj);
-    showToast('✅ AI解析完了。マイソク用追加情報フォームに反映しました', 5000);
+  const persist=useCallback(list=>{setProps(list);lsSet(S_PROPS,list);},[]);
+  const selProp=props.find(p=>p.id===selId);
 
-  } catch (e) {
-    console.error(e);
-    showToast('❌ AI解析エラー: ' + e.message, 6000);
-  } finally {
-    if (btn) btn.disabled = false;
-    if (spin) spin.style.display = 'none';
-  }
+  const filtered=props.filter(p=>{
+    const q=search.toLowerCase();
+    const ok=!q||[p.name,p.address,p.station,p.currentStatus].some(s=>s?.toLowerCase().includes(q));
+    const fs=fStatus==="all"||p.currentStatus===fStatus||
+      (fStatus==="サブリース"&&p.currentStatus?.includes("サブリース"));
+    return ok&&fs;
+  }).sort((a,b)=>{
+    if(sortBy==="date")return new Date(b.updatedAt||0)-new Date(a.updatedAt||0);
+    if(sortBy==="name")return(a.name||"").localeCompare(b.name||"");
+    if(sortBy==="cf")return getCF(b)-getCF(a);
+    if(sortBy==="yield")return(getYld(b)||0)-(getYld(a)||0);
+    return 0;
+  });
+
+  const doNew=()=>{setForm({...DEF,id:uid(),createdAt:now(),updatedAt:now()});setIsEdit(false);setFTab("maisoku");setMaText("");setUpFile(null);setAiMsg("");setView("form");};
+  const doEdit=p=>{setForm({...p});setIsEdit(true);setFTab("basic");setAiMsg("");setView("form");};
+  const doView=id=>{setSelId(id);setView("report");};
+  const doDelete=id=>{
+    if(!window.confirm("この物件データを削除しますか？"))return;
+    persist(props.filter(p=>p.id!==id));
+    if(selId===id){setSelId(null);setView("list");}
+  };
+  const doSave=()=>{
+    const p={...form,updatedAt:now()};
+    const idx=props.findIndex(x=>x.id===p.id);
+    const next=idx>=0?props.map(x=>x.id===p.id?p:x):[p,...props];
+    persist(next);setSelId(p.id);setView("report");
+  };
+  const upd=(k,v)=>setForm(prev=>({...prev,[k]:v}));
+
+  /* AI: テキスト解析 */
+  const readText=async()=>{
+    if(!apiKey){setApiModal(true);return;}
+    if(!maText.trim())return;
+    setLoading(true);setAiMsg("⏳ テキストを解析中...");
+    try{
+      const raw=await callClaude(apiKey,SYS_EXTRACT,`以下のマイソク情報を解析してください：\n\n${maText}`);
+      applyParsed(JSON.parse(raw.replace(/```json|```/g,"").trim()));
+      setAiMsg("✅ 読み取り完了！「基本情報」タブで内容を確認してください");setFTab("basic");
+    }catch(e){setAiMsg(`❌ エラー: ${e.message}`);}
+    setLoading(false);
+  };
+
+  /* AI: ファイル解析 */
+  const readFile=async()=>{
+    if(!apiKey){setApiModal(true);return;}
+    if(!upFile)return;
+    setLoading(true);setAiMsg("⏳ ファイルを解析中...");
+    try{
+      const b64=await toB64(upFile);
+      const mt=upFile.type;
+      const content=mt==="application/pdf"
+        ?[{type:"document",source:{type:"base64",media_type:"application/pdf",data:b64}},{type:"text",text:"このPDFの販売図面から物件情報をJSONで抽出してください。"}]
+        :[{type:"image",source:{type:"base64",media_type:mt,data:b64}},{type:"text",text:"この画像の販売図面から物件情報をJSONで抽出してください。"}];
+      const raw=await callClaude(apiKey,SYS_EXTRACT,content);
+      applyParsed(JSON.parse(raw.replace(/```json|```/g,"").trim()));
+      setAiMsg(`✅ ${mt.startsWith("image/")?"画像":"PDF"}の読み取り完了！「基本情報」タブで確認してください`);setFTab("basic");
+    }catch(e){setAiMsg(`❌ エラー: ${e.message}`);}
+    setLoading(false);
+  };
+
+  const applyParsed=p=>{
+    const fields=["name","address","station","builtDate","builtYear","structure","area","balcony","floor","totalUnits","landRight","laundry","rent","managementFee","repairFund","otherFee","managementCompany","currentStatus","deliveryDate","askingPrice","sublease","notes"];
+    setForm(prev=>{const u={...prev};fields.forEach(k=>{if(p[k]!=null&&p[k]!=="")u[k]=p[k];});return u;});
+  };
+
+  /* AI: レポート生成 */
+  const genReport=async()=>{
+    if(!apiKey){setApiModal(true);return;}
+    setLoading(true);setAiMsg("⏳ AIが調査・分析レポートを生成中...\n（30〜60秒かかる場合があります）");
+    try{
+      const info=JSON.stringify({
+        name:form.name,address:form.address,station:form.station,builtDate:form.builtDate,
+        builtYear:form.builtYear,structure:form.structure,area:form.area,floor:form.floor,
+        totalUnits:form.totalUnits,rent:form.rent,managementFee:form.managementFee,
+        repairFund:form.repairFund,loanPayment:form.loanPayment,loanBalance:form.loanBalance,
+        loanRate:form.loanRate,loanRemainingYears:form.loanRemainingYears,
+        askingPrice:form.askingPrice,currentStatus:form.currentStatus,sublease:form.sublease,
+        monthlyCF:getCF(form),
+      },null,2);
+      const raw=await callClaude(apiKey,SYS_REPORT,`以下の物件情報を分析し、詳細な調査レポートをJSONで生成してください：\n\n${info}`);
+      const r=JSON.parse(raw.replace(/```json|```/g,"").trim());
+      setForm(prev=>({
+        ...prev,
+        rentPeriods:[r.rentTrend?.p1||prev.rent,r.rentTrend?.p2,r.rentTrend?.p3,r.rentTrend?.p4,r.rentTrend?.p5,r.rentTrend?.p6],
+        salePrice:r.saleScenario?.market?r.saleScenario.market*10000:prev.salePrice,
+        salePriceHigh:r.saleScenario?.high?r.saleScenario.high*10000:prev.salePriceHigh,
+        salePriceLow:r.saleScenario?.low?r.saleScenario.low*10000:prev.salePriceLow,
+        depreciation:r.depreciation?.amount||prev.depreciation,
+        propertyTax:r.propertyTax?.amount||prev.propertyTax,
+        aiReport:r,updatedAt:now(),
+      }));
+      setAiMsg("✅ AIレポート生成完了！「保存してレポートを見る」をクリックしてください");
+    }catch(e){setAiMsg(`❌ エラー: ${e.message}`);}
+    setLoading(false);
+  };
+
+  return(
+    <div style={{fontFamily:"inherit",minHeight:"100vh",background:LIGHT}}>
+      {/* HEADER */}
+      <header style={{background:NAVY,color:"#fff",padding:"0 20px",display:"flex",alignItems:"center",height:52,gap:8,position:"sticky",top:0,zIndex:100,boxShadow:"0 2px 8px rgba(0,0,32,.3)"}}>
+        <div style={{fontSize:17,fontWeight:"bold",cursor:"pointer",marginRight:12,letterSpacing:"-.3px",whiteSpace:"nowrap"}} onClick={()=>setView("list")}>
+          🏢 不動産投資分析
+          <sup style={{fontSize:9,opacity:.6,marginLeft:3}}>v10</sup>
+        </div>
+        {[
+          {id:"list",label:"📋 一覧",fn:()=>setView("list"),active:view==="list"},
+          {id:"new",label:"＋ 新規登録",fn:doNew,active:view==="form"&&!isEdit},
+        ].map(n=>(
+          <button key={n.id} onClick={n.fn} style={{
+            background:n.active?"rgba(255,255,255,.2)":"transparent",
+            color:"#fff",border:"none",padding:"5px 13px",borderRadius:6,
+            cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:5,whiteSpace:"nowrap"
+          }}>
+            {n.label}
+            {n.id==="list"&&props.length>0&&<span style={{background:"rgba(255,255,255,.25)",borderRadius:10,padding:"1px 6px",fontSize:11}}>{props.length}</span>}
+          </button>
+        ))}
+        <div style={{marginLeft:"auto",display:"flex",gap:8,alignItems:"center"}}>
+          <span style={{fontSize:11,opacity:.6,display:window.innerWidth>600?"inline":"none"}}>{apiKey?"✅ API設定済":"⚠️ 未設定"}</span>
+          <button onClick={()=>setApiModal(true)} style={{background:"rgba(255,255,255,.15)",border:"1px solid rgba(255,255,255,.3)",color:"#fff",padding:"4px 11px",borderRadius:6,cursor:"pointer",fontSize:12}}>
+            ⚙️ API設定
+          </button>
+        </div>
+      </header>
+
+      <main style={{padding:"20px",maxWidth:1200,margin:"0 auto"}}>
+        {view==="list"&&<ListView props={filtered} total={props.length} search={search} setSearch={setSearch} sortBy={sortBy} setSortBy={setSortBy} fStatus={fStatus} setFStatus={setFStatus} onNew={doNew} onView={doView} onEdit={doEdit} onDelete={doDelete}/>}
+        {view==="form"&&<FormView data={form} upd={upd} fTab={fTab} setFTab={setFTab} maText={maText} setMaText={setMaText} upFile={upFile} setUpFile={setUpFile} fileRef={fileRef} onReadText={readText} onReadFile={readFile} onGenReport={genReport} onSave={doSave} onCancel={()=>setView("list")} aiMsg={aiMsg} loading={loading} isEdit={isEdit}/>}
+        {view==="report"&&selProp&&<ReportView prop={selProp} onEdit={()=>doEdit(selProp)} onBack={()=>setView("list")}/>}
+      </main>
+
+      {apiModal&&<ApiModal cur={apiKey} onSave={k=>{setApiKey(k);lsSet(S_KEY,k);setApiModal(false);}} onClose={()=>setApiModal(false)}/>}
+    </div>
+  );
 }
 
-// 解析結果をフォームに反映
-function applyMaisokuResult(obj) {
-  if (!obj) return;
-  const sv = (id, v) => { const el = document.getElementById(id); if (el && v !== undefined && v !== '') el.value = v; };
+/* ════════════════════════════════════════════
+   LIST VIEW
+════════════════════════════════════════════ */
+function ListView({props,total,search,setSearch,sortBy,setSortBy,fStatus,setFStatus,onNew,onView,onEdit,onDelete}){
+  const statuses=[{id:"all",label:`全て(${total})`},{id:"サブリース",label:"サブリース"},{id:"賃貸中",label:"賃貸中"},{id:"空室",label:"空室"}];
+  return(
+    <div>
+      <div style={{display:"flex",alignItems:"center",marginBottom:16,gap:12,flexWrap:"wrap"}}>
+        <h2 style={{margin:0,fontSize:20,color:NAVY,fontWeight:"bold"}}>物件一覧</h2>
+        <button onClick={onNew} style={S.btn(NAVY,{fontSize:13,padding:"7px 16px"})}>＋ 新規物件を登録</button>
+        <div style={{marginLeft:"auto",fontSize:13,color:"#666"}}>{props.length}件表示 / 計{total}件</div>
+      </div>
 
-  // マイソク用追加情報フォームに反映
-  sv('maisoku_area',       obj.area);
-  sv('maisoku_balcony',    obj.balcony || '');
-  sv('maisoku_washer',     obj.washer  || '有');
-  sv('maisoku_landrights', obj.landrights || '所有権');
-  sv('maisoku_floor',      obj.floor);
-  sv('maisoku_builtdate',  obj.builtDate);
-  sv('maisoku_mgmtco',     obj.mgmtCo);
-  sv('maisoku_status',     obj.status  || '賃貸中');
-  sv('maisoku_delivery',   obj.delivery || '応相談');
-  sv('maisoku_otherfee',   obj.otherFee);
-  if (obj.feesTotal) {
-    // 内訳不明の場合は管理費欄に入れる
-    sv('maisoku_mgmtfee',    obj.feesTotal);
-    sv('maisoku_repairfund', '');
-  } else {
-    sv('maisoku_mgmtfee',    obj.mgmtFee);
-    sv('maisoku_repairfund', obj.repairFund);
-  }
-  if (obj.notes) sv('maisoku_notes', obj.notes);
+      {/* Search bar */}
+      <div style={{...S.card(),marginBottom:14,padding:14,display:"flex",flexWrap:"wrap",gap:10,alignItems:"center"}}>
+        <div style={{position:"relative",flex:"1 1 240px"}}>
+          <span style={{position:"absolute",left:9,top:"50%",transform:"translateY(-50%)",color:"#aaa"}}>🔍</span>
+          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="物件名・住所・駅名で検索..."
+            style={{...S.inp(),paddingLeft:32}}/>
+        </div>
+        <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
+          <span style={{fontSize:12,color:"#666",alignSelf:"center"}}>現況：</span>
+          {statuses.map(s=>(
+            <button key={s.id} onClick={()=>setFStatus(s.id)} style={{
+              background:fStatus===s.id?NAVY:"transparent",color:fStatus===s.id?"#fff":"#555",
+              border:`1px solid ${fStatus===s.id?NAVY:"#cdd5e0"}`,padding:"4px 10px",
+              borderRadius:5,cursor:"pointer",fontSize:12,whiteSpace:"nowrap"
+            }}>{s.label}</button>
+          ))}
+        </div>
+        <div style={{display:"flex",gap:6,alignItems:"center"}}>
+          <span style={{fontSize:12,color:"#666"}}>並替：</span>
+          <select value={sortBy} onChange={e=>setSortBy(e.target.value)} style={{...S.inp(),width:"auto",padding:"4px 8px",fontSize:12}}>
+            <option value="date">更新日時</option>
+            <option value="name">物件名</option>
+            <option value="cf">CF順</option>
+            <option value="yield">利回り順</option>
+          </select>
+        </div>
+      </div>
 
-  // 総戸数・階建て
-  if (obj.totalUnits || obj.totalFloors) {
-    const u = obj.totalUnits ? obj.totalUnits + '戸' : '';
-    const f = obj.totalFloors ? '（' + obj.totalFloors + '階建）' : '';
-    sv('maisoku_totalunits', u + f);
-  }
+      {props.length===0&&(
+        <div style={{textAlign:"center",padding:"80px 20px",color:"#888"}}>
+          <div style={{fontSize:48,marginBottom:16}}>🏢</div>
+          <div style={{fontSize:18,fontWeight:"bold",marginBottom:8,color:"#555"}}>
+            {total===0?"物件データがありません":"検索結果がありません"}
+          </div>
+          <div style={{fontSize:13,marginBottom:24}}>{total===0?"「新規物件を登録」から最初の物件を追加しましょう":"検索条件を変更してください"}</div>
+          {total===0&&<button onClick={onNew} style={S.btn(NAVY)}>＋ 新規物件を登録</button>}
+        </div>
+      )}
 
-  // 入力フォームにも反映（物件名・所在地・最寄駅）
-  if (obj.name)      sv('prop_name',     obj.name);
-  if (obj.address)   sv('prop_location', obj.address);
-  if (obj.transport) sv('prop_station',  obj.transport);
-  if (obj.rent)      sv('rental',        obj.rent);
-  if (obj.area)      sv('prop_area',     obj.area);
-  if (obj.builtDate) {
-    // 築年数を計算（競工年から）
-    const yearMatch = obj.builtDate.match(/(\d{4})/);
-    if (yearMatch) {
-      const age = new Date().getFullYear() - parseInt(yearMatch[1]);
-      if (age >= 0 && age < 100) sv('prop_age', age);
-    }
-  }
-  if (obj.price) sv('maisoku_price', obj.price);
-
-  // 計算を再実行
-  if (typeof recalcAll === 'function') recalcAll();
-
-  showToast('✅ フォームに反映しました。入力フォームタブで確認してください', 4000);
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(340px,1fr))",gap:16}}>
+        {props.map(p=><PropCard key={p.id} p={p} onView={onView} onEdit={onEdit} onDelete={onDelete}/>)}
+      </div>
+    </div>
+  );
 }
+
+function PropCard({p,onView,onEdit,onDelete}){
+  const cf=getCF(p);
+  const yl=getYld(p);
+  const cfColor=cf>=0?GREEN:RED;
+  const [hover,setHover]=useState(false);
+  return(
+    <div style={{...S.card(),position:"relative",boxShadow:hover?"0 4px 16px rgba(0,32,96,.13)":"0 1px 4px rgba(0,0,0,.08)",transition:"box-shadow .2s",cursor:"pointer"}}
+      onMouseEnter={()=>setHover(true)} onMouseLeave={()=>setHover(false)}
+      onClick={()=>onView(p.id)}>
+      <div style={{position:"absolute",top:12,right:12}}>
+        <span style={S.badge(p.currentStatus?.includes("サブリース")?GOLD:p.currentStatus==="空室"?RED:GREEN,{fontSize:10,whiteSpace:"nowrap"})}>
+          {p.currentStatus||"未設定"}
+        </span>
+      </div>
+      <div style={{fontWeight:"bold",fontSize:15,color:NAVY,marginBottom:4,paddingRight:90,lineHeight:1.3}}>
+        {p.name||"（物件名未設定）"}
+      </div>
+      <div style={{fontSize:12,color:"#666",marginBottom:10}}>{p.station||p.address||"所在地未設定"}</div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:7,marginBottom:8}}>
+        {[
+          {l:"月間CF",v:`${cf>=0?"+":""}${fmt(cf)}円`,c:cfColor},
+          {l:"表面利回り",v:yl?yl.toFixed(1)+"%":"−",c:yl&&yl>=5?GREEN:yl?"#e07b00":RED},
+          {l:"ローン残債",v:p.loanBalance?p.loanBalance+"万円":"−",c:"#555"},
+        ].map(m=>(
+          <div key={m.l} style={{background:"#f8fafc",borderRadius:6,padding:"6px 8px",textAlign:"center"}}>
+            <div style={{fontSize:10,color:"#888",marginBottom:2}}>{m.l}</div>
+            <div style={{fontSize:13,fontWeight:"bold",color:m.c}}>{m.v}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:7,marginBottom:10}}>
+        {[
+          {l:"賃料",v:fmtY(p.rent)},
+          {l:"管理費+修繕",v:fmtY((Number(p.managementFee)||0)+(Number(p.repairFund)||0)||null)},
+        ].map(m=>(
+          <div key={m.l} style={{background:"#f8fafc",borderRadius:6,padding:"5px 8px",textAlign:"center"}}>
+            <div style={{fontSize:10,color:"#888",marginBottom:1}}>{m.l}</div>
+            <div style={{fontSize:12,fontWeight:"bold",color:"#333"}}>{m.v}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{fontSize:11,color:"#aaa",marginBottom:10}}>
+        {p.builtDate||"築年月不明"} | {p.area||"−"}㎡ | {p.floor||"−"} | 更新：{fmtD(p.updatedAt)}
+      </div>
+      <div style={{display:"flex",gap:6}}>
+        <button onClick={e=>{e.stopPropagation();onView(p.id);}} style={S.btn(NAVY,{flex:1,padding:"6px 10px",fontSize:12})}>📊 レポートを見る</button>
+        <button onClick={e=>{e.stopPropagation();onEdit(p);}} style={S.btn(NAVY2,{padding:"6px 10px",fontSize:12})}>✏️</button>
+        <button onClick={e=>{e.stopPropagation();onDelete(p.id);}} style={{background:"#fee",border:"1px solid #fcc",color:RED,padding:"6px 10px",borderRadius:7,cursor:"pointer",fontSize:12}}>🗑</button>
+      </div>
+      {p.aiReport&&<div style={{position:"absolute",bottom:12,right:12,fontSize:10,color:GREEN}}>🤖 AI分析済</div>}
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════
+   FORM VIEW
+════════════════════════════════════════════ */
+function FormView({data,upd,fTab,setFTab,maText,setMaText,upFile,setUpFile,fileRef,onReadText,onReadFile,onGenReport,onSave,onCancel,aiMsg,loading,isEdit}){
+  const tabs=[
+    {id:"maisoku",label:"📄 マイソク読み取り"},
+    {id:"basic",label:"🏢 基本情報"},
+    {id:"financial",label:"💰 財務情報"},
+    {id:"sale",label:"🏷️ 売却設定"},
+    {id:"ai",label:"🤖 AIレポート生成"},
+  ];
+  const cf=getCF(data);
+  const yl=getYld(data);
+  return(
+    <div>
+      <div style={{display:"flex",alignItems:"center",marginBottom:14,gap:10,flexWrap:"wrap"}}>
+        <button onClick={onCancel} style={{background:"transparent",border:"1px solid #cdd5e0",padding:"6px 12px",borderRadius:6,cursor:"pointer",fontSize:13}}>← 一覧へ</button>
+        <h2 style={{margin:0,fontSize:17,color:NAVY,fontWeight:"bold"}}>
+          {isEdit?`編集：${data.name||"（物件名未設定）"}`:"新規物件登録"}
+        </h2>
+        {loading&&<span style={{fontSize:12,color:GOLD}}><span className="spinner"/>処理中...</span>}
+      </div>
+
+      {/* Quick metrics */}
+      {(data.rent||data.loanPayment)&&(
+        <div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap"}}>
+          <div style={{background:"#fff",border:`1px solid ${(cf>=0?GREEN:RED)}30`,borderRadius:6,padding:"5px 12px",display:"flex",gap:8,alignItems:"center"}}>
+            <span style={{fontSize:11,color:"#666"}}>月間CF</span>
+            <span style={{fontSize:14,fontWeight:"bold",color:cf>=0?GREEN:RED}}>{cf>=0?"+":""}{fmtY(cf)}</span>
+          </div>
+          {yl&&<div style={{background:"#fff",border:"1px solid #e07b0030",borderRadius:6,padding:"5px 12px",display:"flex",gap:8,alignItems:"center"}}>
+            <span style={{fontSize:11,color:"#666"}}>表面利回り</span>
+            <span style={{fontSize:14,fontWeight:"bold",color:"#e07b00"}}>{fmtP(yl)}</span>
+          </div>}
+        </div>
+      )}
+
+      {/* Tabs */}
+      <div style={{display:"flex",gap:0,borderBottom:"2px solid #e2e8f0",flexWrap:"wrap"}}>
+        {tabs.map(t=>(
+          <button key={t.id} onClick={()=>setFTab(t.id)} style={{
+            background:"transparent",border:"none",padding:"10px 14px",cursor:"pointer",
+            fontSize:12,color:fTab===t.id?NAVY:"#666",fontWeight:fTab===t.id?"bold":"normal",
+            borderBottom:fTab===t.id?`3px solid ${NAVY}`:"3px solid transparent",marginBottom:-2,whiteSpace:"nowrap"
+          }}>{t.label}</button>
+        ))}
+      </div>
+
+      <div style={{...S.card(),borderTopLeftRadius:0,borderTopRightRadius:0,padding:22}}>
+        {fTab==="maisoku"&&<TabMaisoku maText={maText} setMaText={setMaText} upFile={upFile} setUpFile={setUpFile} fileRef={fileRef} onReadText={onReadText} onReadFile={onReadFile} aiMsg={aiMsg} loading={loading} onNext={()=>setFTab("basic")}/>}
+        {fTab==="basic"&&<TabBasic data={data} upd={upd}/>}
+        {fTab==="financial"&&<TabFinancial data={data} upd={upd} cf={cf} yl={yl}/>}
+        {fTab==="sale"&&<TabSale data={data} upd={upd}/>}
+        {fTab==="ai"&&<TabAI data={data} onGenReport={onGenReport} aiMsg={aiMsg} loading={loading}/>}
+      </div>
+
+      <div style={{display:"flex",gap:10,marginTop:14,alignItems:"center",flexWrap:"wrap"}}>
+        <button onClick={onSave} style={S.btn(GREEN,{padding:"10px 24px",fontSize:14})}>
+          💾 保存してレポートを見る
+        </button>
+        <button onClick={onCancel} style={{background:"transparent",border:"1px solid #cdd5e0",padding:"10px 18px",borderRadius:7,cursor:"pointer",fontSize:13}}>キャンセル</button>
+        {loading&&<span style={{fontSize:12,color:"#888"}}>処理中... しばらくお待ちください</span>}
+      </div>
+    </div>
+  );
+}
+
+/* ── Tabs ── */
+function TabMaisoku({maText,setMaText,upFile,setUpFile,fileRef,onReadText,onReadFile,aiMsg,loading,onNext}){
+  return(
+    <div>
+      <p style={{fontSize:13,color:"#555",marginBottom:16,lineHeight:1.7}}>
+        販売図面（マイソク）の情報をAIが自動読み取りします。<br/>
+        <strong>テキスト・画像（JPG/PNG）・PDF</strong>に対応。
+      </p>
+      <div style={{border:"1px solid #e2e8f0",borderRadius:8,padding:16,marginBottom:14}}>
+        <div style={{fontWeight:"bold",fontSize:13,color:NAVY,marginBottom:8}}>📝 テキスト貼り付け</div>
+        <p style={{fontSize:12,color:"#777",marginBottom:8}}>チラシ・HP・メールからコピーしたテキストを貼り付けてください。</p>
+        <textarea value={maText} onChange={e=>setMaText(e.target.value)}
+          placeholder="物件名、所在地、賃料、管理費など..."
+          style={{...S.inp(),height:140,resize:"vertical",fontSize:12}}/>
+        <div style={{display:"flex",gap:8,marginTop:8}}>
+          <button onClick={onReadText} disabled={loading||!maText.trim()} style={S.btn(NAVY,{fontSize:12,opacity:loading||!maText.trim()?0.6:1})}>
+            {loading&&<span className="spinner"/>}🤖 AI解析 → フォームに反映
+          </button>
+          <button onClick={()=>setMaText("")} style={S.btn("#888",{fontSize:12,padding:"8px 14px"})}>🗑 クリア</button>
+        </div>
+      </div>
+      <div style={{border:"1px solid #e2e8f0",borderRadius:8,padding:16,marginBottom:14}}>
+        <div style={{fontWeight:"bold",fontSize:13,color:NAVY,marginBottom:8}}>📎 画像・PDFアップロード</div>
+        <p style={{fontSize:12,color:"#777",marginBottom:8}}>販売図面の画像（JPG/PNG）またはPDFをアップロードしてください。</p>
+        <div
+          onClick={()=>fileRef.current?.click()}
+          onDragOver={e=>e.preventDefault()}
+          onDrop={e=>{e.preventDefault();const f=e.dataTransfer.files[0];if(f)setUpFile(f);}}
+          style={{border:`2px dashed ${upFile?NAVY:"#cdd5e0"}`,borderRadius:7,padding:"24px 20px",textAlign:"center",cursor:"pointer",background:upFile?"#f0f4ff":"#fafafa",marginBottom:8}}>
+          <div style={{fontSize:24,marginBottom:6}}>{upFile?"📄":"📂"}</div>
+          {upFile?(
+            <div>
+              <div style={{fontWeight:"bold",color:NAVY}}>{upFile.name}</div>
+              <div style={{fontSize:12,color:"#888"}}>{(upFile.size/1024).toFixed(0)} KB</div>
+            </div>
+          ):(
+            <div style={{color:"#888",fontSize:13}}>ドラッグ&ドロップ またはクリックして選択</div>
+          )}
+        </div>
+        <input ref={fileRef} type="file" accept="image/*,.pdf" style={{display:"none"}} onChange={e=>setUpFile(e.target.files[0])}/>
+        <div style={{display:"flex",gap:8}}>
+          <button onClick={onReadFile} disabled={loading||!upFile} style={S.btn(NAVY,{fontSize:12,opacity:loading||!upFile?0.6:1})}>
+            {loading&&<span className="spinner"/>}🤖 ファイル解析 → フォームに反映
+          </button>
+          <button onClick={()=>setUpFile(null)} style={S.btn("#888",{fontSize:12,padding:"8px 14px"})}>🗑 クリア</button>
+        </div>
+      </div>
+      {aiMsg&&(
+        <div style={{padding:"10px 14px",background:aiMsg.startsWith("✅")?"#f0fff4":aiMsg.startsWith("❌")?"#fff0f0":"#fffbf0",borderLeft:`3px solid ${aiMsg.startsWith("✅")?GREEN:aiMsg.startsWith("❌")?RED:GOLD}`,borderRadius:4,fontSize:13,marginBottom:14,whiteSpace:"pre-wrap"}}>
+          {aiMsg}
+        </div>
+      )}
+      <button onClick={onNext} style={S.btn(NAVY2,{fontSize:13})}>次へ：基本情報を入力 →</button>
+    </div>
+  );
+}
+
+function FRow({label:lbl,value,onChange,type="text",placeholder,half}){
+  return(
+    <div style={{gridColumn:half?"span 1":"span 1"}}>
+      <label style={S.lbl()}>{lbl}</label>
+      <input type={type} value={value??""} onChange={e=>onChange(e.target.value)} placeholder={placeholder} style={S.inp()}/>
+    </div>
+  );
+}
+
+function TabBasic({data,upd}){
+  return(
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+      <div style={{gridColumn:"1/-1"}}><FRow label="物件名・号室 *" value={data.name} onChange={v=>upd("name",v)} placeholder="例：グリフォーネ横浜・中央 305号室"/></div>
+      <FRow label="所在地" value={data.address} onChange={v=>upd("address",v)} placeholder="例：神奈川県横浜市西区中央一丁目17番1"/>
+      <FRow label="最寄駅・徒歩" value={data.station} onChange={v=>upd("station",v)} placeholder="例：戸部駅 徒歩5分"/>
+      <FRow label="築年月" value={data.builtDate} onChange={v=>upd("builtDate",v)} placeholder="例：2004年3月"/>
+      <FRow label="築年数（年）" value={data.builtYear} onChange={v=>upd("builtYear",v)} type="number" placeholder="22"/>
+      <FRow label="構造" value={data.structure} onChange={v=>upd("structure",v)} placeholder="RC造"/>
+      <FRow label="専有面積（㎡）" value={data.area} onChange={v=>upd("area",v)} type="number" placeholder="30.60"/>
+      <FRow label="バルコニー面積（㎡）" value={data.balcony} onChange={v=>upd("balcony",v)} placeholder="なし場合は−"/>
+      <FRow label="階数" value={data.floor} onChange={v=>upd("floor",v)} placeholder="例：3階部分"/>
+      <FRow label="総戸数" value={data.totalUnits} onChange={v=>upd("totalUnits",v)} placeholder="例：62戸"/>
+      <FRow label="土地権利" value={data.landRight} onChange={v=>upd("landRight",v)} placeholder="所有権"/>
+      <FRow label="室内洗濯機置場" value={data.laundry} onChange={v=>upd("laundry",v)} placeholder="有 / 無"/>
+      <FRow label="管理会社" value={data.managementCompany} onChange={v=>upd("managementCompany",v)} placeholder="例：ASIAN STAR"/>
+      <FRow label="現況" value={data.currentStatus} onChange={v=>upd("currentStatus",v)} placeholder="例：サブリース(プレミアムライフ)"/>
+      <FRow label="引渡日" value={data.deliveryDate} onChange={v=>upd("deliveryDate",v)} placeholder="要相談"/>
+      <FRow label="希望販売価格（万円）" value={data.askingPrice} onChange={v=>upd("askingPrice",v)} type="number" placeholder="例：1850"/>
+      <div style={{gridColumn:"1/-1"}}><FRow label="サブリース情報" value={data.sublease} onChange={v=>upd("sublease",v)} placeholder="例：プレミアムライフ 承継条件あり"/></div>
+      <div style={{gridColumn:"1/-1"}}>
+        <label style={S.lbl()}>備考・メモ</label>
+        <textarea value={data.notes} onChange={e=>upd("notes",e.target.value)} style={{...S.inp(),height:70,resize:"vertical"}} placeholder="自由記入"/>
+      </div>
+    </div>
+  );
+}
+
+function TabFinancial({data,upd,cf,yl}){
+  return(
+    <div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:16}}>
+        <FRow label="月額賃料（円）" value={data.rent} onChange={v=>upd("rent",v)} type="number" placeholder="例：76500"/>
+        <FRow label="管理費（円/月）" value={data.managementFee} onChange={v=>upd("managementFee",v)} type="number" placeholder="例：5400"/>
+        <FRow label="修繕積立金（円/月）" value={data.repairFund} onChange={v=>upd("repairFund",v)} type="number" placeholder="例：5400"/>
+        <FRow label="その他費用（円/月）" value={data.otherFee} onChange={v=>upd("otherFee",v)} type="number" placeholder="0"/>
+        <FRow label="月額ローン返済（円）" value={data.loanPayment} onChange={v=>upd("loanPayment",v)} type="number" placeholder="例：66166"/>
+        <FRow label="　うち元本（円）" value={data.monthlyPrincipal} onChange={v=>upd("monthlyPrincipal",v)} type="number" placeholder="例：34283"/>
+        <FRow label="　うち金利（円）" value={data.monthlyInterest} onChange={v=>upd("monthlyInterest",v)} type="number" placeholder="例：31883"/>
+        <FRow label="ローン残債（万円）" value={data.loanBalance} onChange={v=>upd("loanBalance",v)} type="number" placeholder="例：1791"/>
+        <FRow label="ローン金利（%）" value={data.loanRate} onChange={v=>upd("loanRate",v)} type="number" placeholder="例：1.81"/>
+        <FRow label="ローン残年数（年）" value={data.loanRemainingYears} onChange={v=>upd("loanRemainingYears",v)} type="number" placeholder="例：29"/>
+        <FRow label="契約日" value={data.contractDate} onChange={v=>upd("contractDate",v)} placeholder="例：2018年11月30日"/>
+        <FRow label="年間固定資産税（円）" value={data.propertyTax} onChange={v=>upd("propertyTax",v)} type="number" placeholder="60000"/>
+        <FRow label="年間減価償却費（円）" value={data.depreciation} onChange={v=>upd("depreciation",v)} type="number" placeholder="例：151920"/>
+        <FRow label="所得税・住民税率（%）" value={data.taxRate} onChange={v=>upd("taxRate",v)} type="number" placeholder="30"/>
+        <FRow label="初期投資額（万円）" value={data.initialInvestment} onChange={v=>upd("initialInvestment",v)} type="number" placeholder="頭金＋諸費用"/>
+      </div>
+      <div style={{padding:"12px 16px",background:cf>=0?"#f0fff4":"#fff0f0",borderRadius:8,borderLeft:`4px solid ${cf>=0?GREEN:RED}`,marginBottom:16}}>
+        <div style={{fontSize:12,color:"#666",marginBottom:4}}>月間キャッシュフロー（賃料−管理費等−ローン）</div>
+        <div style={{fontSize:22,fontWeight:"bold",color:cf>=0?GREEN:RED}}>{cf>=0?"+":""}{fmtY(cf)} / 月</div>
+        {yl&&<div style={{fontSize:12,color:"#666",marginTop:4}}>表面利回り：{fmtP(yl)}</div>}
+      </div>
+      <div>
+        <div style={{fontWeight:"bold",fontSize:14,color:NAVY,marginBottom:10}}>📈 賃料推移設定（5年ごと・AIが自動設定）</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:8}}>
+          {["1〜5年目","6〜10年目","11〜15年目","16〜20年目","21〜25年目","26〜30年目"].map((lbl,i)=>(
+            <div key={i}>
+              <label style={S.lbl({fontSize:10})}>{lbl}</label>
+              <input type="number" value={data.rentPeriods[i]||""} onChange={e=>{const p=[...data.rentPeriods];p[i]=e.target.value;upd("rentPeriods",p);}}
+                style={S.inp({fontSize:12})} placeholder="円/月"/>
+            </div>
+          ))}
+        </div>
+        <div style={{fontSize:11,color:"#888",marginTop:6}}>※ AIレポート生成時に自動設定されます</div>
+      </div>
+    </div>
+  );
+}
+
+function TabSale({data,upd}){
+  const spM=data.salePrice?Math.round(Number(data.salePrice)/10000):"";
+  const spH=data.salePriceHigh?Math.round(Number(data.salePriceHigh)/10000):"";
+  const spL=data.salePriceLow?Math.round(Number(data.salePriceLow)/10000):"";
+  const scenarios=[
+    {label:"相場価格",price:Number(data.salePrice)||0,color:NAVY2},
+    {label:"チャレンジ価格",price:Number(data.salePriceHigh)||0,color:GOLD},
+  ].filter(s=>s.price>0);
+  return(
+    <div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:16}}>
+        <FRow label="相場売却価格（万円）" value={spM} onChange={v=>upd("salePrice",v*10000)} type="number" placeholder="例：1850"/>
+        <FRow label="チャレンジ価格（万円）" value={spH} onChange={v=>upd("salePriceHigh",v*10000)} type="number" placeholder="例：2000"/>
+        <FRow label="保守的価格（万円）" value={spL} onChange={v=>upd("salePriceLow",v*10000)} type="number" placeholder="例：1650"/>
+        <FRow label="司法書士・印紙代（円）" value={data.notaryFee} onChange={v=>upd("notaryFee",v)} type="number" placeholder="50000"/>
+        <FRow label="一括返済手数料（円）" value={data.prepaymentFee} onChange={v=>upd("prepaymentFee",v)} type="number" placeholder="0"/>
+        <FRow label="賃管解除費用（円）" value={data.cancellationFee} onChange={v=>upd("cancellationFee",v)} type="number" placeholder="0"/>
+      </div>
+      {scenarios.length>0&&(
+        <div>
+          <div style={{fontWeight:"bold",fontSize:13,color:NAVY,marginBottom:10}}>📊 売却手残り試算（概算）</div>
+          {scenarios.map((s,i)=>{
+            const commission=(s.price*0.03+60000)*1.1;
+            const residual=(Number(data.loanBalance)||0)*10000;
+            const net=s.price-commission-(Number(data.notaryFee)||0)-(Number(data.prepaymentFee)||0)-residual;
+            return(
+              <div key={i} style={{padding:"10px 14px",background:"#f8fafc",borderRadius:7,marginBottom:8,borderLeft:`3px solid ${s.color}`}}>
+                <div style={{fontSize:12,fontWeight:"bold",color:s.color,marginBottom:4}}>{s.label}</div>
+                <div style={{display:"flex",gap:16,fontSize:12,flexWrap:"wrap"}}>
+                  <span>売却：{fmtM(s.price)}</span>
+                  <span>仲介：▲{fmtM(commission)}</span>
+                  <span>残債：▲{fmtM(residual)}</span>
+                  <strong style={{color:net>=0?GREEN:RED}}>手残：{net>=0?"+":""}{fmtM(net)}</strong>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TabAI({data,onGenReport,aiMsg,loading}){
+  const r=data.aiReport;
+  return(
+    <div>
+      <div style={{background:"linear-gradient(135deg,#f0f4ff,#e8f0fe)",padding:20,borderRadius:10,marginBottom:16,border:"1px solid #c5d0e8"}}>
+        <h3 style={{margin:"0 0 8px",color:NAVY,fontSize:15}}>🤖 AIによる調査・分析レポート生成</h3>
+        <p style={{fontSize:13,color:"#555",margin:"0 0 14px",lineHeight:1.7}}>
+          基本情報・財務情報をもとにClaude AIが以下を自動生成します：<br/>
+          ✅ 物件・エリアの市場分析　✅ アピールポイント・懸念事項<br/>
+          ✅ 賃料推移予測（30年分）　✅ 適正売却価格試算　✅ 節税CF分析
+        </p>
+        <button onClick={onGenReport} disabled={loading} style={S.btn(NAVY,{padding:"11px 24px",fontSize:14,opacity:loading?.7:1})}>
+          {loading?<><span className="spinner"/>AIが分析中...</>:"🚀 AIレポートを生成する"}
+        </button>
+        {r&&<span style={{marginLeft:12,fontSize:12,color:GREEN}}>✅ 生成済み（{fmtD(data.updatedAt)}）</span>}
+      </div>
+      {aiMsg&&(
+        <div style={{padding:"10px 14px",background:aiMsg.startsWith("✅")?"#f0fff4":aiMsg.startsWith("❌")?"#fff0f0":"#fffbf0",borderLeft:`3px solid ${aiMsg.startsWith("✅")?GREEN:aiMsg.startsWith("❌")?RED:GOLD}`,borderRadius:4,fontSize:13,marginBottom:14,whiteSpace:"pre-wrap"}}>
+          {aiMsg}
+        </div>
+      )}
+      {r&&(
+        <div>
+          <div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap"}}>
+            <span style={S.badge(r.cfRating==="◎良好"?GREEN:r.cfRating==="△要注意"?RED:"#e07b00")}>CF：{r.cfRating}</span>
+            <span style={S.badge(r.saleRating==="◎今が売り時"?GREEN:r.saleRating==="△今は保有"?RED:GOLD)}>売却：{r.saleRating}</span>
+          </div>
+          <div style={{fontSize:13,color:"#333",lineHeight:1.8,background:"#f8fafc",padding:14,borderRadius:8}}>
+            <strong>総合評価：</strong><br/>{r.overallJudgment}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════
+   REPORT VIEW
+════════════════════════════════════════════ */
+function ReportView({prop:p,onEdit,onBack}){
+  const r=p.aiReport;
+  const cf=getCF(p);
+  const yl=getYld(p);
+  const annualRent=(Number(p.rent)||0)*12;
+  const annualMgmt=((Number(p.managementFee)||0)+(Number(p.repairFund)||0))*12;
+  const annualLoan=(Number(p.loanPayment)||0)*12;
+  const annualInterest=(Number(p.monthlyInterest)||0)*12;
+  const annualTax=Number(p.propertyTax)||0;
+  const annualDepr=Number(p.depreciation)||0;
+  const taxR=(Number(p.taxRate)||30)/100;
+  const realEstate=annualRent-annualMgmt-annualInterest-annualTax-annualDepr;
+  const taxBurden=realEstate*taxR;
+
+  const saleScenarios=[
+    {label:"保守的",price:Number(p.salePriceLow)||0,color:"#888"},
+    {label:"相場",price:Number(p.salePrice)||0,color:NAVY2},
+    {label:"チャレンジ",price:Number(p.salePriceHigh)||0,color:GOLD},
+  ].filter(s=>s.price>0).map(s=>{
+    const c=(s.price*0.03+60000)*1.1;
+    const res=(Number(p.loanBalance)||0)*10000;
+    const net=s.price-c-(Number(p.notaryFee)||50000)-(Number(p.prepaymentFee)||0)-(Number(p.cancellationFee)||0)-res;
+    return{...s,commission:c,residual:res,net};
+  });
+
+  const TRow=({lbl,v,bold,color})=>(
+    <tr style={{borderBottom:"1px solid #f5f5f5"}}>
+      <td style={{padding:"6px 10px",fontSize:12,color:"#555"}}>{lbl}</td>
+      <td style={{padding:"6px 10px",fontSize:12,fontWeight:bold?"bold":"normal",color:color||"#333",textAlign:"right"}}>{v}</td>
+    </tr>
+  );
+
+  return(
+    <div>
+      {/* Header */}
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14,flexWrap:"wrap"}}>
+        <button onClick={onBack} style={{background:"transparent",border:"1px solid #cdd5e0",padding:"6px 12px",borderRadius:6,cursor:"pointer",fontSize:13}}>← 一覧</button>
+        <h2 style={{margin:0,fontSize:17,color:NAVY,fontWeight:"bold",flex:1,minWidth:0}}>{p.name}</h2>
+        {r&&<>
+          <span style={S.badge(r.cfRating==="◎良好"?GREEN:r.cfRating==="△要注意"?RED:"#e07b00")}>CF：{r.cfRating}</span>
+          <span style={S.badge(r.saleRating==="◎今が売り時"?GREEN:r.saleRating==="△今は保有"?RED:GOLD)}>売却：{r.saleRating}</span>
+        </>}
+        <button onClick={onEdit} style={S.btn(NAVY,{padding:"7px 16px",fontSize:12})}>✏️ 編集</button>
+      </div>
+      <div style={{fontSize:11,color:"#aaa",marginBottom:14}}>最終更新：{fmtD(p.updatedAt)} ／ {r?"🤖 AI分析済み":"AI分析未実施"}</div>
+
+      {/* Basic + Financial */}
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:14}}>
+        <div style={S.card()}>
+          <div style={{fontWeight:"bold",fontSize:14,color:NAVY,marginBottom:10}}>🏢 物件基本情報</div>
+          <table style={{width:"100%",borderCollapse:"collapse"}}>
+            <tbody>
+              {[["所在地",p.address],["最寄駅",p.station],["構造・築年月",`${p.structure||"−"} / ${p.builtDate||"−"}`],
+                ["専有面積",p.area?`${p.area}㎡`:"−"],["階数",p.floor||"−"],["総戸数",p.totalUnits||"−"],
+                ["現況",p.currentStatus||"−"],["管理会社",p.managementCompany||"−"],["サブリース",p.sublease||"なし"]
+              ].map(([l,v])=><TRow key={l} lbl={l} v={v||"−"}/>)}
+            </tbody>
+          </table>
+        </div>
+        <div style={S.card()}>
+          <div style={{fontWeight:"bold",fontSize:14,color:NAVY,marginBottom:10}}>💹 財務サマリー</div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:7,marginBottom:12}}>
+            {[
+              {l:"月間CF",v:`${cf>=0?"+":""}${fmtY(cf)}`,c:cf>=0?GREEN:RED},
+              {l:"月額賃料",v:fmtY(p.rent),c:"#333"},
+              {l:"管理費+修繕",v:fmtY((Number(p.managementFee)||0)+(Number(p.repairFund)||0)),c:"#333"},
+              {l:"ローン返済",v:fmtY(p.loanPayment),c:"#333"},
+              {l:"ローン残債",v:p.loanBalance?p.loanBalance+"万円":"−",c:"#555"},
+              {l:"表面利回り",v:yl?yl.toFixed(2)+"%":"−",c:yl&&yl>=5?GREEN:"#e07b00"},
+            ].map(m=>(
+              <div key={m.l} style={{background:"#f8fafc",borderRadius:6,padding:"7px 9px",textAlign:"center"}}>
+                <div style={{fontSize:10,color:"#888",marginBottom:2}}>{m.l}</div>
+                <div style={{fontSize:13,fontWeight:"bold",color:m.c}}>{m.v}</div>
+              </div>
+            ))}
+          </div>
+          {p.askingPrice&&<div style={{padding:"7px 12px",background:"#f0f4ff",borderRadius:6,fontSize:12}}>
+            <strong>希望販売価格：</strong>{p.askingPrice}万円
+          </div>}
+        </div>
+      </div>
+
+      {/* AI Report */}
+      {r?(
+        <>
+          <div style={{...S.card(),marginBottom:14}}>
+            <div style={{fontWeight:"bold",fontSize:14,color:NAVY,marginBottom:10}}>📊 市場分析・物件の立ち位置（AI調査）</div>
+            <div style={{fontSize:13,color:"#333",lineHeight:1.8,whiteSpace:"pre-wrap"}}>{r.marketSummary}</div>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:14}}>
+            <div style={S.card()}>
+              <div style={{fontWeight:"bold",fontSize:13,color:GREEN,marginBottom:8}}>✅ アピールポイント</div>
+              {(r.positivePoints||[]).map((pt,i)=>(
+                <div key={i} style={{fontSize:12,color:"#333",padding:"5px 0",borderBottom:"1px solid #f5f5f5",lineHeight:1.6}}>● {pt}</div>
+              ))}
+              <div style={{fontWeight:"bold",fontSize:13,color:NAVY2,margin:"12px 0 6px"}}>🚇 駅・エリア（プラス）</div>
+              {(r.stationPositive||[]).map((pt,i)=>(
+                <div key={i} style={{fontSize:11,color:"#444",padding:"3px 0",lineHeight:1.5}}>✅ {pt}</div>
+              ))}
+            </div>
+            <div style={S.card()}>
+              <div style={{fontWeight:"bold",fontSize:13,color:RED,marginBottom:8}}>⚠️ 懸念事項</div>
+              {(r.negativePoints||[]).map((pt,i)=>(
+                <div key={i} style={{fontSize:12,color:"#333",padding:"5px 0",borderBottom:"1px solid #f5f5f5",lineHeight:1.6}}>▲ {pt}</div>
+              ))}
+              <div style={{fontWeight:"bold",fontSize:13,color:NAVY2,margin:"12px 0 6px"}}>🚇 駅・エリア（マイナス）</div>
+              {(r.stationNegative||[]).map((pt,i)=>(
+                <div key={i} style={{fontSize:11,color:"#666",padding:"3px 0",lineHeight:1.5}}>⚠️ {pt}</div>
+              ))}
+            </div>
+          </div>
+          <div style={{...S.card(),marginBottom:14,borderLeft:`4px solid ${NAVY}`}}>
+            <div style={{fontWeight:"bold",fontSize:14,color:NAVY,marginBottom:8}}>📋 総合評価（AI分析）</div>
+            <div style={{fontSize:13,color:"#333",lineHeight:1.8,marginBottom:12,whiteSpace:"pre-wrap"}}>{r.overallJudgment}</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+              <div style={{padding:"10px 12px",background:"#f0fff4",borderRadius:6,borderLeft:`3px solid ${GREEN}`}}>
+                <div style={{fontSize:11,fontWeight:"bold",color:GREEN,marginBottom:4}}>保有継続の場合</div>
+                <div style={{fontSize:12,color:"#333",lineHeight:1.6}}>{r.holdAdvice}</div>
+              </div>
+              <div style={{padding:"10px 12px",background:"#fff8f0",borderRadius:6,borderLeft:`3px solid ${GOLD}`}}>
+                <div style={{fontSize:11,fontWeight:"bold",color:GOLD,marginBottom:4}}>売却を検討する場合</div>
+                <div style={{fontSize:12,color:"#333",lineHeight:1.6}}>{r.saleAdvice}</div>
+              </div>
+            </div>
+          </div>
+        </>
+      ):(
+        <div style={{...S.card(),marginBottom:14,textAlign:"center",padding:40}}>
+          <div style={{fontSize:32,marginBottom:12}}>🤖</div>
+          <div style={{fontSize:15,color:"#555",marginBottom:8}}>AI分析レポートが未生成です</div>
+          <div style={{fontSize:12,color:"#888",marginBottom:16}}>物件情報を入力してAIレポートを生成すると、詳細な分析が表示されます</div>
+          <button onClick={onEdit} style={S.btn(NAVY)}>✏️ 編集してAIレポートを生成</button>
+        </div>
+      )}
+
+      {/* CF Analysis */}
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:14}}>
+        <div style={S.card()}>
+          <div style={{fontWeight:"bold",fontSize:14,color:NAVY,marginBottom:10}}>💰 節税効果の試算</div>
+          <table style={{width:"100%",borderCollapse:"collapse"}}>
+            <tbody>
+              <TRow lbl="年間賃料収入" v={fmtY(annualRent)}/>
+              <TRow lbl="管理費・修繕積立" v={`▲${fmtY(annualMgmt)}`} color={RED}/>
+              <TRow lbl="ローン利息（年間）" v={`▲${fmtY(annualInterest)}`} color={RED}/>
+              <TRow lbl="固定資産税" v={`▲${fmtY(annualTax)}`} color={RED}/>
+              <TRow lbl="減価償却費" v={`▲${fmtY(annualDepr)}`} color={RED}/>
+              <TRow lbl="不動産所得" v={fmtY(realEstate)} bold color={realEstate>=0?RED:GREEN}/>
+              {realEstate>=0
+                ?<TRow lbl={`所得税・住民税（${p.taxRate}%）`} v={`▲${fmtY(taxBurden)}`} bold color={RED}/>
+                :<TRow lbl={`節税額（${p.taxRate}%）`} v={`+${fmtY(-taxBurden)}`} bold color={GREEN}/>
+              }
+            </tbody>
+          </table>
+        </div>
+        <div style={S.card()}>
+          <div style={{fontWeight:"bold",fontSize:14,color:NAVY,marginBottom:10}}>📈 年間キャッシュフロー</div>
+          <table style={{width:"100%",borderCollapse:"collapse"}}>
+            <tbody>
+              <TRow lbl="年間賃料収入" v={fmtY(annualRent)}/>
+              <TRow lbl="管理費・修繕積立" v={`▲${fmtY(annualMgmt)}`} color={RED}/>
+              <TRow lbl="ローン返済（年間）" v={`▲${fmtY(annualLoan)}`} color={RED}/>
+              <TRow lbl="固定資産税" v={`▲${fmtY(annualTax)}`} color={RED}/>
+              <TRow lbl="年間CF" v={`${cf*12>=0?"+":""}${fmtY(cf*12)}`} bold color={cf>=0?GREEN:RED}/>
+              <TRow lbl="月換算" v={`${cf>=0?"+":""}${fmtY(cf)}`} bold color={cf>=0?GREEN:RED}/>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Rent Trend */}
+      {p.rentPeriods?.some(v=>v)&&(
+        <div style={{...S.card(),marginBottom:14}}>
+          <div style={{fontWeight:"bold",fontSize:14,color:NAVY,marginBottom:10}}>
+            📉 賃料推移シミュレーション（5年ごと）
+            {r?.rentTrend?.note&&<span style={{fontSize:11,color:"#888",fontWeight:"normal",marginLeft:8}}>{r.rentTrend.note}</span>}
+          </div>
+          <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+            {["1〜5年目","6〜10年目","11〜15年目","16〜20年目","21〜25年目","26〜30年目"].map((lbl,i)=>{
+              const v=p.rentPeriods[i];
+              const base=Number(p.rent)||1;
+              const pct=v?((Number(v)-base)/base*100).toFixed(1):null;
+              return(
+                <div key={i} style={{flex:"1 1 90px",background:"#f8fafc",borderRadius:6,padding:"8px 10px",textAlign:"center"}}>
+                  <div style={{fontSize:10,color:"#888",marginBottom:2}}>{lbl}</div>
+                  <div style={{fontSize:13,fontWeight:"bold",color:NAVY}}>{v?fmtY(v):"−"}</div>
+                  {pct&&i>0&&<div style={{fontSize:11,color:Number(pct)>=0?GREEN:RED}}>{Number(pct)>0?"+":""}{pct}%</div>}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Sale Scenarios */}
+      {saleScenarios.length>0&&(
+        <div style={{...S.card(),marginBottom:14}}>
+          <div style={{fontWeight:"bold",fontSize:14,color:NAVY,marginBottom:10}}>
+            🏷️ 売却シナリオ試算
+            {r?.saleScenario?.note&&<span style={{fontSize:11,color:"#888",fontWeight:"normal",marginLeft:8}}>{r.saleScenario.note}</span>}
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:`repeat(${saleScenarios.length},1fr)`,gap:10}}>
+            {saleScenarios.map((s,i)=>(
+              <div key={i} style={{border:`2px solid ${s.color}20`,borderTop:`3px solid ${s.color}`,borderRadius:8,padding:12,background:`${s.color}08`}}>
+                <div style={{fontSize:12,fontWeight:"bold",color:s.color,marginBottom:6}}>{s.label}シナリオ</div>
+                <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
+                  <tbody>
+                    {[["売却価格",fmtM(s.price)],["仲介手数料",`▲${fmtM(s.commission)}`],["ローン返済",`▲${fmtM(s.residual)}`],["諸費用",`▲${fmtM(s.notary+s.prepay+s.cancel)}`]].map(([l,v])=>(
+                      <tr key={l}><td style={{padding:"3px 0",color:"#666"}}>{l}</td><td style={{textAlign:"right"}}>{v}</td></tr>
+                    ))}
+                    <tr style={{borderTop:`1px solid ${s.color}40`}}>
+                      <td style={{padding:"5px 0",fontWeight:"bold"}}>手残り</td>
+                      <td style={{textAlign:"right",fontWeight:"bold",color:s.net>=0?GREEN:RED,fontSize:14}}>
+                        {s.net>=0?"+":""}{fmtM(s.net)}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {p.notes&&(
+        <div style={{...S.card(),marginBottom:14}}>
+          <div style={{fontWeight:"bold",fontSize:13,color:NAVY,marginBottom:6}}>📝 備考・メモ</div>
+          <div style={{fontSize:12,color:"#444",lineHeight:1.7,whiteSpace:"pre-wrap"}}>{p.notes}</div>
+        </div>
+      )}
+      <div style={{fontSize:10,color:"#ccc",textAlign:"right",marginTop:4}}>本ツールの計算結果はあくまで参考値です。実際の投資判断は専門家にご相談ください。</div>
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════
+   API MODAL
+════════════════════════════════════════════ */
+function ApiModal({cur,onSave,onClose}){
+  const [k,setK]=useState(cur||"");
+  return(
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:9999}}>
+      <div style={{background:"#fff",borderRadius:12,padding:28,width:440,maxWidth:"90vw",boxShadow:"0 8px 40px rgba(0,0,0,.2)"}}>
+        <h3 style={{margin:"0 0 8px",color:NAVY}}>⚙️ Anthropic API設定</h3>
+        <p style={{fontSize:13,color:"#666",marginBottom:16,lineHeight:1.7}}>
+          マイソク読み取りとAI調査レポート生成にはAnthropicのAPIキーが必要です。<br/>
+          <a href="https://console.anthropic.com" target="_blank" rel="noreferrer" style={{color:NAVY}}>console.anthropic.com</a> で取得できます。
+        </p>
+        <label style={S.lbl()}>APIキー（sk-ant-...）</label>
+        <input type="password" value={k} onChange={e=>setK(e.target.value)} placeholder="sk-ant-api03-..."
+          style={{...S.inp(),marginBottom:16,fontFamily:"monospace"}}/>
+        <div style={{display:"flex",gap:8}}>
+          <button onClick={()=>onSave(k)} style={S.btn(NAVY,{flex:1})}>保存</button>
+          <button onClick={onClose} style={{flex:1,background:"transparent",border:"1px solid #cdd5e0",padding:"9px 18px",borderRadius:7,cursor:"pointer",fontSize:13}}>キャンセル</button>
+        </div>
+        <p style={{fontSize:11,color:"#aaa",marginTop:12,marginBottom:0}}>
+          ※ APIキーはブラウザのlocalStorageに保存されます。第三者と共有しないでください。
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/* ── RENDER ── */
+const root=ReactDOM.createRoot(document.getElementById("root"));
+root.render(<App/>);
 </script>
 </body>
 </html>
