@@ -341,7 +341,7 @@ function PropCard({p,onView,onEdit,onDelete}){
   );
 }
 
-function FormView({data,upd,fTab,setFTab,maText,setMaText,upFile,setUpFile,fileRef,onReadText,onReadFile,onGenReport,onSave,onCancel,aiMsg,loading,isEdit}){
+function FormView({data,upd,fTab,setFTab,maText,setMaText,upFile,setUpFile,fileRef,onReadText,onReadFile,onGenReport,onSave,onCancel,aiMsg,loading,isEdit,onSearch}){
   const tabs=[{id:"maisoku",label:"📄 マイソク読み取り"},{id:"basic",label:"🏢 基本情報"},{id:"financial",label:"💰 財務情報"},{id:"sale",label:"🏷️ 売却設定"},{id:"ai",label:"🤖 AIレポート生成"}];
   const cf=getCF(data);const yl=getYld(data);
   return(
