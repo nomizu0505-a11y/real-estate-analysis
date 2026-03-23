@@ -176,22 +176,18 @@ function App(){
     if(!propName||propName.length<4)return;
     setAiMsg("🔍 物件情報をWEB検索中...");setLoading(true);
     try{
-      const body={model:MODEL,max_tokens:1000,
-        tools:[{type:"web_search_20250305",name:"web_search"}],
-        messages:[{role:"user",content:`マンション名「${propName}」の所在地・最寄駅・築年月・構造・総戸数をWEB検索して調べ、JSONで返してください。JSONのみ返答してください。`}]
-      };
-      const res=await fetch("/api/claude",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
-      const data=await res.json();
-      if(!res.ok)throw new Error(data.error?.message||data.error||`HTTP ${res.status}`);
-      const textBlock=data.content.find(b=>b.type==="text");
-      if(textBlock){
-        const cleaned=textBlock.text.replace(/```json|```/g,"").replace(/^[^{]*/,"").replace(/[^}]*$/,"").trim();
-        if(cleaned.startsWith("{")){
-          const parsed=JSON.parse(cleaned);
-          const fields=["address","station","builtDate","builtYear","structure","totalUnits"];
-          setForm(prev=>{const u={...prev};fields.forEach(k=>{if(parsed[k]!=null&&parsed[k]!=="")u[k]=parsed[k];});return u;});
-          setAiMsg("✅ WEB検索で物件情報を自動反映しました！内容を確認してください");
-        }
+const sys=`あなたは不動産情報調査のエキスパートです。与えられたマンション名から情報を調べ、必ずJSONのみで返答してください。{"address":"住所","station":"最寄駅と徒歩分","builtDate":"築年月","builtYear":築年数,"structure":"構造","totalUnits":"総戸数"}情報が不明な項目はnullにしてください。`;
+      const prompt=`マンション「${propName}」の所在地・最寄駅・徒歩・築年月・構造・総戸数を調べてJSONで返してください。`;
+      const raw=await callClaude(sys,prompt);
+      const jsonMatch=raw.match(/\{[\s\S]*?\}/);
+      if(jsonMatch){
+        const parsed=JSON.parse(jsonMatch[0]);
+        const fields=["address","station","builtDate","builtYear","structure","totalUnits"];
+        setForm(prev=>{const u={...prev};fields.forEach(k=>{if(parsed[k]!=null&&parsed[k]!=="")u[k]=parsed[k];});return u;});
+        setAiMsg("✅ 物件情報を反映しました！基本情報タブで確認してください");
+        setFTab("basic");
+      }else{
+        setAiMsg("⚠️ 情報が見つかりませんでした。手動で入力してください");
       }
     }catch(e){setAiMsg(`⚠️ WEB検索: ${e.message}`);}
     setLoading(false);
