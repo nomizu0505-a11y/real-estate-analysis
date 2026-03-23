@@ -365,7 +365,7 @@ function FormView({data,upd,fTab,setFTab,maText,setMaText,upFile,setUpFile,fileR
       </div>
       <div style={{...S.card(),borderTopLeftRadius:0,borderTopRightRadius:0,padding:22}}>
         {fTab==="maisoku"&&<TabMaisoku maText={maText} setMaText={setMaText} upFile={upFile} setUpFile={setUpFile} fileRef={fileRef} onReadText={onReadText} onReadFile={onReadFile} aiMsg={aiMsg} loading={loading} onNext={()=>setFTab("basic")}/>}
-        {fTab==="basic"&&<TabBasic data={data} upd={upd} onSearch={searchByName} loading={loading}/>}
+        {fTab==="basic"&&<TabBasic data={data} upd={upd} onSearch={onSearch} loading={loading}/>}
         {fTab==="financial"&&<TabFinancial data={data} upd={upd} cf={cf} yl={yl}/>}
         {fTab==="sale"&&<TabSale data={data} upd={upd}/>}
         {fTab==="ai"&&<TabAI data={data} onGenReport={onGenReport} aiMsg={aiMsg} loading={loading}/>}
