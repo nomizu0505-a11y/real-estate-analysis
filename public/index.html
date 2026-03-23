@@ -261,7 +261,7 @@ const sys=`あなたは不動産情報調査のエキスパートです。与え
       </header>
       <main style={{padding:"20px",maxWidth:1200,margin:"0 auto"}}>
         {view==="list"&&<ListView props={filtered} total={props.length} search={search} setSearch={setSearch} sortBy={sortBy} setSortBy={setSortBy} fStatus={fStatus} setFStatus={setFStatus} onNew={doNew} onView={doView} onEdit={doEdit} onDelete={doDelete}/>}
-        {view==="form"&&<FormView data={form} upd={upd} fTab={fTab} setFTab={setFTab} maText={maText} setMaText={setMaText} upFile={upFile} setUpFile={setUpFile} fileRef={fileRef} onReadText={readText} onReadFile={readFile} onGenReport={genReport} onSave={doSave} onCancel={()=>setView("list")} aiMsg={aiMsg} loading={loading} isEdit={isEdit}/>}
+        {view==="form"&&<FormView data={form} upd={upd} fTab={fTab} setFTab={setFTab} maText={maText} setMaText={setMaText} upFile={upFile} setUpFile={setUpFile} fileRef={fileRef} onReadText={readText} onReadFile={readFile} onGenReport={genReport} onSave={doSave} onCancel={()=>setView("list")} aiMsg={aiMsg} loading={loading} isEdit={isEdit} onSearch={searchByName}/>}
         {view==="report"&&selProp&&<ReportView prop={selProp} onEdit={()=>doEdit(selProp)} onBack={()=>setView("list")}/>}
       </main>
     </div>
