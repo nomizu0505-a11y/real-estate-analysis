@@ -230,8 +230,9 @@ function App(){
         ?[{type:"document",source:{type:"base64",media_type:"application/pdf",data:b64}},{type:"text",text:"このPDFの販売図面（マイソク）から物件情報をすべて読み取り、JSONで抽出してください。"}]
         :[{type:"image",source:{type:"base64",media_type:mt,data:b64}},{type:"text",text:"この画像の販売図面（マイソク）から物件情報をすべて読み取り、JSONで抽出してください。"}];
       const raw=await callClaude(SYS_EXTRACT,content);
-      const cleaned=raw.replace(/```json|```/g,"").replace(/^[^{]*/,"").replace(/[^}]*$/,"").trim();
-      const parsed=JSON.parse(cleaned);
+     const jsonMatch=raw.match(/\{[\s\S]*\}/);
+      if(!jsonMatch)throw new Error("解析失敗。再度お試しください。");
+      const parsed=JSON.parse(jsonMatch[0]);
       applyParsed(parsed);
       const found=Object.entries(parsed).filter(([k,v])=>v!=null&&v!=="").map(([k])=>k);
       setAiMsg(`✅ ${mt.startsWith("image/")?"画像":"PDF"}の読み取り完了！${found.length}項目を反映しました`);
@@ -239,7 +240,6 @@ function App(){
     }catch(e){setAiMsg(`❌ エラー: ${e.message}`);}
     setLoading(false);
   };
-
   const genReport=async()=>{
     setLoading(true);setAiMsg("⏳ AIが調査・分析レポートを生成中...\n（30〜60秒かかる場合があります）");
     try{
