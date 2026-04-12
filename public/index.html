@@ -322,7 +322,7 @@ function PropCard({p,onView,onEdit,onDelete}){
       <div style={{fontWeight:"bold",fontSize:15,color:NAVY,marginBottom:4,paddingRight:90,lineHeight:1.3}}>{p.name||"（物件名未設定）"}</div>
       <div style={{fontSize:12,color:"#666",marginBottom:10}}>{p.station||p.address||"所在地未設定"}</div>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:7,marginBottom:8}}>
-        {[{l:"月間CF",v:`${cf>=0?"+":""}${fmt(cf)}円`,c:cf>=0?GREEN:RED},{l:"表面利回り",v:yl?yl.toFixed(1)+"%":"−",c:yl&&yl>=5?GREEN:yl?"#e07b00":RED},{l:"ローン残債",v:p.loanBalance?p.loanBalance+"万円":"−",c:"#555"}].map(m=>(
+        {[{l:"月間CF",v:`${cf>=0?"+":""}${fmt(cf)}円`,c:cf>=0?GREEN:RED},{l:"表面利回り",v:yl?yl.toFixed(1)+"%":"−",c:yl&&yl>=5?GREEN:yl?"#e07b00":RED},{l:"ローン残債",v:p.loanBalance?(Number(p.loanBalance)*10000).toLocaleString()+"円":"−",c:"#555"}].map(m=>(
           <div key={m.l} style={{background:"#f8fafc",borderRadius:6,padding:"6px 8px",textAlign:"center"}}><div style={{fontSize:10,color:"#888",marginBottom:2}}>{m.l}</div><div style={{fontSize:13,fontWeight:"bold",color:m.c}}>{m.v}</div></div>
         ))}
       </div>
@@ -594,10 +594,27 @@ function SimSection({p}){
   const recoveryYears=recoveryMonths?(recoveryMonths/12).toFixed(1):null;
   const totalToBreakEven=recoveryMonths?(loanYears+recoveryMonths/12).toFixed(1):null;
 
-  const N=periods.length;
+  // 完済後→プラマイ0までの列を追加（displayPeriodsとして管理）
+  const displayPeriods=[...periods];
+  if(recoveryMonths&&postMonthly>0&&grandTotal<0){
+    const piPost=periods.length;
+    const postRent=Number(p.rentPeriods[piPost])||Number(p.rent)||0;
+    const postMgmtVal=mgmtBase+piPost*INC;
+    const postDelegVal=delegBase+piPost*INC;
+    const postCFVal=postRent-postDelegVal-postMgmtVal;
+    displayPeriods.push({
+      label:`完済後\n結4${recoveryYears}年`,
+      rent:postRent,mgmt:postMgmtVal,deleg:postDelegVal,
+      monthlyLoan:0,monthlyCF:postCFVal,
+      months:recoveryMonths,periodCF:postCFVal*recoveryMonths,
+      isPost:true
+    });
+  }
+
+  const N=displayPeriods.length;
   const grid={display:"grid",gridTemplateColumns:`100px repeat(${N},1fr)`};
-  const hdCell=(v)=><div style={{padding:"6px 4px",fontSize:11,color:"#fff",fontWeight:"bold",textAlign:"center",borderRight:"1px solid rgba(255,255,255,.2)"}}>{v}</div>;
-  const tdCell=(v,c,bold=false)=><div style={{padding:"5px 6px",fontSize:11,textAlign:"right",color:c||"#333",fontWeight:bold?"bold":"normal",borderRight:"1px solid #f0f0f0",borderBottom:"1px solid #f5f5f5"}}>{v}</div>;
+  const hdCell=(v,isPost=false)=><div style={{padding:"6px 4px",fontSize:11,color:"#fff",fontWeight:"bold",textAlign:"center",borderRight:"1px solid rgba(255,255,255,.2)",background:isPost?GREEN:"transparent",whiteSpace:"pre-line",lineHeight:1.3}}>{v}</div>;
+  const tdCell=(v,c,bold=false,isPost=false)=><div style={{padding:"5px 6px",fontSize:11,textAlign:"right",color:c||"#333",fontWeight:bold?"bold":"normal",borderRight:"1px solid #f0f0f0",borderBottom:"1px solid #f5f5f5",background:isPost?"#f0fff4":"transparent"}}>{v}</div>;
   const lbCell=(v)=><div style={{padding:"5px 8px",fontSize:11,color:"#555",borderRight:"1px solid #e8e8e8",borderBottom:"1px solid #f5f5f5",background:"#fafafa"}}>{v}</div>;
 
   return(
@@ -610,30 +627,30 @@ function SimSection({p}){
         <div style={{minWidth:Math.max(480,100+N*100)}}>
           <div style={{...grid,background:NAVY,borderRadius:"6px 6px 0 0"}}>
             {hdCell("＜内訳＞")}
-            {periods.map((r,i)=>hdCell(r.label))}
+            {displayPeriods.map((r,i)=>hdCell(r.label,!!r.isPost))}
           </div>
           {[
-            {label:"賃料",vals:periods.map(r=>Number(r.rent).toLocaleString()),colors:periods.map(()=>"#333")},
-            {label:"業務委託手数料",vals:periods.map(r=>r.deleg>0?`▲${r.deleg.toLocaleString()}`:"−"),colors:periods.map(()=>RED)},
-            {label:"管理費・修繕積立金",vals:periods.map(r=>r.mgmt>0?`▲${r.mgmt.toLocaleString()}`:"−"),colors:periods.map(()=>RED)},
-            {label:"月のご返済",vals:periods.map(r=>r.monthlyLoan>0?`▲${r.monthlyLoan.toLocaleString()}`:"−"),colors:periods.map(r=>r.monthlyLoan>0?RED:"#888")},
+            {label:"賃料",vals:displayPeriods.map(r=>Number(r.rent).toLocaleString()),colors:displayPeriods.map(()=>"#333")},
+            {label:"業務委託手数料",vals:displayPeriods.map(r=>r.deleg>0?`▲${r.deleg.toLocaleString()}`:"−"),colors:displayPeriods.map(()=>RED)},
+            {label:"管理費・修繕積立金",vals:displayPeriods.map(r=>r.mgmt>0?`▲${r.mgmt.toLocaleString()}`:"−"),colors:displayPeriods.map(()=>RED)},
+            {label:"月のご返済",vals:displayPeriods.map(r=>r.monthlyLoan>0?`▲${r.monthlyLoan.toLocaleString()}`:"−"),colors:displayPeriods.map(r=>r.monthlyLoan>0?RED:"#888")},
           ].map((row,ri)=>(
             <div key={ri} style={grid}>
               {lbCell(row.label)}
-              {row.vals.map((v,i)=>tdCell(v,row.colors[i]))}
+              {row.vals.map((v,i)=>tdCell(v,row.colors[i],false,!!displayPeriods[i].isPost))}
             </div>
           ))}
           <div style={{...grid,background:"#fff8e1"}}>
             <div style={{padding:"5px 8px",fontSize:11,fontWeight:"bold",color:NAVY,borderRight:"1px solid #e8e8e8",borderBottom:"1px solid #ffe082"}}>月の収支</div>
-            {periods.map((r,i)=>(<div key={i} style={{padding:"5px 6px",fontSize:12,textAlign:"right",fontWeight:"bold",color:r.monthlyCF>=0?GREEN:RED,borderRight:"1px solid #ffe082",borderBottom:"1px solid #ffe082"}}>{r.monthlyCF>=0?"+":""}{r.monthlyCF.toLocaleString()}</div>))}
+            {displayPeriods.map((r,i)=>(<div key={i} style={{padding:"5px 6px",fontSize:12,textAlign:"right",fontWeight:"bold",color:r.monthlyCF>=0?GREEN:RED,borderRight:"1px solid #ffe082",borderBottom:"1px solid #ffe082",background:r.isPost?"#f0fff4":"transparent"}}>{r.monthlyCF>=0?"+":""}{r.monthlyCF.toLocaleString()}</div>))}
           </div>
           <div style={grid}>
             {lbCell("月数（回）")}
-            {periods.map((r,i)=>tdCell(`${r.months}回`,"#666"))}
+            {displayPeriods.map((r,i)=>tdCell(`${r.months}回`,"#666",false,!!r.isPost))}
           </div>
           <div style={{...grid,background:"#e8f0ff"}}>
             <div style={{padding:"6px 8px",fontSize:11,fontWeight:"bold",color:NAVY,borderRight:"1px solid #c5d0e8"}}>期間収支</div>
-            {periods.map((r,i)=>(<div key={i} style={{padding:"6px 6px",fontSize:12,textAlign:"right",fontWeight:"bold",color:r.periodCF>=0?GREEN:RED,borderRight:"1px solid #c5d0e8"}}>{r.periodCF>=0?"+":""}{r.periodCF.toLocaleString()}</div>))}
+            {displayPeriods.map((r,i)=>(<div key={i} style={{padding:"6px 6px",fontSize:12,textAlign:"right",fontWeight:"bold",color:r.periodCF>=0?GREEN:RED,borderRight:"1px solid #c5d0e8",background:r.isPost?"#f0fff4":"transparent"}}>{r.periodCF>=0?"+":""}{r.periodCF.toLocaleString()}</div>))}
           </div>
         </div>
       </div>
@@ -981,7 +998,7 @@ function ReportView({prop:p,onEdit,onBack,onPrint}){
         <div style={S.card()} className="shadow-card">
           <div style={{fontWeight:"bold",fontSize:14,color:NAVY,marginBottom:10}}>💹 財務サマリー</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:7,marginBottom:12}}>
-            {[{l:"月間CF",v:`${cf>=0?"+":""}${fmtY(cf)}`,c:cf>=0?GREEN:RED},{l:"月額賃料",v:fmtY(p.rent),c:"#333"},{l:"管理費+修繕",v:fmtY((Number(p.managementFee)||0)+(Number(p.repairFund)||0)),c:"#333"},{l:"ローン返済",v:fmtY(p.loanPayment),c:"#333"},{l:"ローン残債",v:p.loanBalance?p.loanBalance+"万円":"−",c:"#555"},{l:"表面利回り",v:yl?yl.toFixed(2)+"%":"−",c:yl&&yl>=5?GREEN:"#e07b00"}].map(m=>(<div key={m.l} style={{background:"#f8fafc",borderRadius:6,padding:"7px 9px",textAlign:"center"}}><div style={{fontSize:10,color:"#888",marginBottom:2}}>{m.l}</div><div style={{fontSize:13,fontWeight:"bold",color:m.c}}>{m.v}</div></div>))}
+            {[{l:"月間CF",v:`${cf>=0?"+":""}${fmtY(cf)}`,c:cf>=0?GREEN:RED},{l:"月額賃料",v:fmtY(p.rent),c:"#333"},{l:"管理費+修繕",v:fmtY((Number(p.managementFee)||0)+(Number(p.repairFund)||0)),c:"#333"},{l:"ローン返済",v:fmtY(p.loanPayment),c:"#333"},{l:"ローン残債",v:p.loanBalance?(Number(p.loanBalance)*10000).toLocaleString()+"円":"−",c:"#555"},{l:"表面利回り",v:yl?yl.toFixed(2)+"%":"−",c:yl&&yl>=5?GREEN:"#e07b00"}].map(m=>(<div key={m.l} style={{background:"#f8fafc",borderRadius:6,padding:"7px 9px",textAlign:"center"}}><div style={{fontSize:10,color:"#888",marginBottom:2}}>{m.l}</div><div style={{fontSize:13,fontWeight:"bold",color:m.c}}>{m.v}</div></div>))}
           </div>
           {p.askingPrice&&<div style={{padding:"7px 12px",background:"#f0f4ff",borderRadius:6,fontSize:12}}><strong>希望販売価格：</strong>{p.askingPrice}万円</div>}
           {p.delegationFee&&<div style={{padding:"5px 12px",marginTop:6,background:"#f8fafc",borderRadius:6,fontSize:11,color:"#666"}}>業務委託費：{fmtY(p.delegationFee)}/月</div>}
