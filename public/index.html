@@ -935,11 +935,11 @@ function TaxCFSection({p}){
             <div style={{fontWeight:"bold",fontSize:12,color:GREEN,marginBottom:8}}>②保険代わり（団体信用生命保険）</div>
             <div style={{fontSize:12,color:"#333",lineHeight:2}}>
               現時点でもしお亡くなりになった場合、<br/>
-              <span style={{fontSize:16,fontWeight:"bold",color:NAVY}}>{loanBalanceYen>0?fmtM(loanBalanceYen):"−"}</span> 程の資産をお身内に残せる。
+              <span style={{fontSize:16,fontWeight:"bold",color:NAVY}}>{loanBalanceYen>0?loanBalanceYen.toLocaleString()+"円":"−"}</span> 程の資産をお身内に残せる。
               {loanBalanceYen>0&&(
                 <div style={{fontSize:11,color:"#888",marginTop:4,padding:"4px 8px",background:"rgba(255,255,255,.7)",borderRadius:4}}>
                   ⇒ 30歳男性・30年満了・掛け捨て定期保険の保険料は<br/>
-                  保険金額{fmtM(Number(p.loanBalance))}で 約2,000〜3,000円/月 程度
+                  保険金額{Number(p.loanBalance).toLocaleString()}円で 約2,000〜3,000円/月 程度
                 </div>
               )}
             </div>
