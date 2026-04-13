@@ -79,7 +79,7 @@ const SYS_EXTRACT=`あなたは不動産物件情報の専門的なデータ抽�
   "totalUnits":"総戸数のテキスト（例：62戸）",
   "landRight":"土地権利（例：所有権）",
   "laundry":"室内洗濯機置場の有無（有/無）",
-  "rent":月額賃料またはサブ賃料の数値(円),
+  "rent":月額賃料またはサブ賃料の数値(円)。共益費・水道費・駐車場代など収入となる費用が記載されていれば全て合算した合計額を入れること,
   "managementFee":管理費の数値(円)または合計のみの場合は合計額,
   "repairFund":修繕積立金の数値(円)または合計のみの場合は0,
   "otherFee":管理費・修繕積立金以外のその他費用(円)のみ（管理費合計をここに入れない）,
@@ -962,6 +962,14 @@ function ReportView({prop:p,onEdit,onBack,onPrint,onUpdateFees}){
     if(key==='p')setPrepayFee(n); else setCancelFee(n);
     onUpdateFees&&onUpdateFees(next);
   };
+  const [editingAI,setEditingAI]=useState(false);
+  const [draftReport,setDraftReport]=useState(null);
+  const startEditAI=()=>{setDraftReport(p.aiReport?JSON.parse(JSON.stringify(p.aiReport)):null);setEditingAI(true);};
+  const saveEditAI=()=>{onUpdateFees&&onUpdateFees({aiReport:draftReport});setEditingAI(false);};
+  const cancelEditAI=()=>setEditingAI(false);
+  const updDraft=(key,val)=>setDraftReport(prev=>({...prev,[key]:val}));
+  const updDraftArr=(key,val)=>setDraftReport(prev=>({...prev,[key]:val.split('\n').map(s=>s.trim()).filter(s=>s)}));
+  const TAStyle={width:"100%",padding:"6px 8px",border:"1px solid #c0cce0",borderRadius:6,fontSize:12,lineHeight:1.7,resize:"vertical",fontFamily:"inherit",background:"#fafcff"};
   const r=p.aiReport;const cf=getCF(p);const yl=getYld(p);
   const annualRent=(Number(p.rent)||0)*12;
   const annualMgmt=((Number(p.managementFee)||0)+(Number(p.repairFund)||0))*12;
@@ -1016,27 +1024,46 @@ function ReportView({prop:p,onEdit,onBack,onPrint,onUpdateFees}){
 
       {/* 2. AI市場分析 */}
       {r?(<>
-        <div style={{...S.card(),marginBottom:14}} className="print-avoid shadow-card"><div style={{fontWeight:"bold",fontSize:14,color:NAVY,marginBottom:10}}>📊 市場分析（AI調査）</div><div style={{fontSize:13,color:"#333",lineHeight:1.8,whiteSpace:"pre-wrap"}}>{r.marketSummary}</div></div>
+        <div style={{display:"flex",justifyContent:"flex-end",marginBottom:6}} className="no-print">
+          {editingAI?(
+            <div style={{display:"flex",gap:8}}>
+              <button onClick={saveEditAI} style={{...S.btn(GREEN),padding:"5px 14px",fontSize:12}}>💾 保存</button>
+              <button onClick={cancelEditAI} style={{...S.btn("#888"),padding:"5px 14px",fontSize:12}}>キャンセル</button>
+            </div>
+          ):(
+            <button onClick={startEditAI} style={{...S.btn(NAVY2),padding:"5px 14px",fontSize:12}}>✏️ AI分析を編集</button>
+          )}
+        </div>
+        <div style={{...S.card(),marginBottom:14}} className="print-avoid shadow-card">
+          <div style={{fontWeight:"bold",fontSize:14,color:NAVY,marginBottom:10}}>📊 市場分析（AI調査）</div>
+          {editingAI?<textarea style={{...TAStyle,minHeight:100}} value={draftReport?.marketSummary||""} onChange={e=>updDraft("marketSummary",e.target.value)}/>:<div style={{fontSize:13,color:"#333",lineHeight:1.8,whiteSpace:"pre-wrap"}}>{r.marketSummary}</div>}
+        </div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:14}}>
           <div style={S.card()} className="shadow-card">
             <div style={{fontWeight:"bold",fontSize:13,color:GREEN,marginBottom:8}}>✅ アピールポイント</div>
-            {(r.positivePoints||[]).map((pt,i)=>(<div key={i} style={{fontSize:12,color:"#333",padding:"5px 0",borderBottom:"1px solid #f5f5f5",lineHeight:1.6}}>● {pt}</div>))}
+            {editingAI?<textarea style={{...TAStyle,minHeight:80}} value={(draftReport?.positivePoints||[]).join("\n")} onChange={e=>updDraftArr("positivePoints",e.target.value)} placeholder="1行1項目"/>:(r.positivePoints||[]).map((pt,i)=>(<div key={i} style={{fontSize:12,color:"#333",padding:"5px 0",borderBottom:"1px solid #f5f5f5",lineHeight:1.6}}>● {pt}</div>))}
             <div style={{fontWeight:"bold",fontSize:13,color:NAVY2,margin:"12px 0 6px"}}>🚇 駅・エリア（プラス）</div>
-            {(r.stationPositive||[]).map((pt,i)=>(<div key={i} style={{fontSize:11,color:"#444",padding:"3px 0",lineHeight:1.5}}>✅ {pt}</div>))}
+            {editingAI?<textarea style={{...TAStyle,minHeight:60}} value={(draftReport?.stationPositive||[]).join("\n")} onChange={e=>updDraftArr("stationPositive",e.target.value)} placeholder="1行1項目"/>:(r.stationPositive||[]).map((pt,i)=>(<div key={i} style={{fontSize:11,color:"#444",padding:"3px 0",lineHeight:1.5}}>✅ {pt}</div>))}
           </div>
           <div style={S.card()} className="shadow-card">
             <div style={{fontWeight:"bold",fontSize:13,color:RED,marginBottom:8}}>⚠️ 懸念事項</div>
-            {(r.negativePoints||[]).map((pt,i)=>(<div key={i} style={{fontSize:12,color:"#333",padding:"5px 0",borderBottom:"1px solid #f5f5f5",lineHeight:1.6}}>▲ {pt}</div>))}
+            {editingAI?<textarea style={{...TAStyle,minHeight:80}} value={(draftReport?.negativePoints||[]).join("\n")} onChange={e=>updDraftArr("negativePoints",e.target.value)} placeholder="1行1項目"/>:(r.negativePoints||[]).map((pt,i)=>(<div key={i} style={{fontSize:12,color:"#333",padding:"5px 0",borderBottom:"1px solid #f5f5f5",lineHeight:1.6}}>▲ {pt}</div>))}
             <div style={{fontWeight:"bold",fontSize:13,color:NAVY2,margin:"12px 0 6px"}}>🚇 駅・エリア（マイナス）</div>
-            {(r.stationNegative||[]).map((pt,i)=>(<div key={i} style={{fontSize:11,color:"#666",padding:"3px 0",lineHeight:1.5}}>⚠️ {pt}</div>))}
+            {editingAI?<textarea style={{...TAStyle,minHeight:60}} value={(draftReport?.stationNegative||[]).join("\n")} onChange={e=>updDraftArr("stationNegative",e.target.value)} placeholder="1行1項目"/>:(r.stationNegative||[]).map((pt,i)=>(<div key={i} style={{fontSize:11,color:"#666",padding:"3px 0",lineHeight:1.5}}>⚠️ {pt}</div>))}
           </div>
         </div>
         <div style={{...S.card(),marginBottom:14,borderLeft:`4px solid ${NAVY}`}} className="shadow-card">
           <div style={{fontWeight:"bold",fontSize:14,color:NAVY,marginBottom:8}}>📋 総合評価（AI分析）</div>
-          <div style={{fontSize:13,color:"#333",lineHeight:1.8,marginBottom:12,whiteSpace:"pre-wrap"}}>{r.overallJudgment}</div>
+          {editingAI?<textarea style={{...TAStyle,minHeight:80,marginBottom:10}} value={draftReport?.overallJudgment||""} onChange={e=>updDraft("overallJudgment",e.target.value)}/>:<div style={{fontSize:13,color:"#333",lineHeight:1.8,marginBottom:12,whiteSpace:"pre-wrap"}}>{r.overallJudgment}</div>}
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-            <div style={{padding:"10px 12px",background:"#f0fff4",borderRadius:6,borderLeft:`3px solid ${GREEN}`}}><div style={{fontSize:11,fontWeight:"bold",color:GREEN,marginBottom:4}}>保有継続の場合</div><div style={{fontSize:12,color:"#333",lineHeight:1.6}}>{r.holdAdvice}</div></div>
-            <div style={{padding:"10px 12px",background:"#fff8f0",borderRadius:6,borderLeft:`3px solid ${GOLD}`}}><div style={{fontSize:11,fontWeight:"bold",color:GOLD,marginBottom:4}}>売却を検討する場合</div><div style={{fontSize:12,color:"#333",lineHeight:1.6}}>{r.saleAdvice}</div></div>
+            <div style={{padding:"10px 12px",background:"#f0fff4",borderRadius:6,borderLeft:`3px solid ${GREEN}`}}>
+              <div style={{fontSize:11,fontWeight:"bold",color:GREEN,marginBottom:4}}>保有継続の場合</div>
+              {editingAI?<textarea style={{...TAStyle,minHeight:60}} value={draftReport?.holdAdvice||""} onChange={e=>updDraft("holdAdvice",e.target.value)}/>:<div style={{fontSize:12,color:"#333",lineHeight:1.6}}>{r.holdAdvice}</div>}
+            </div>
+            <div style={{padding:"10px 12px",background:"#fff8f0",borderRadius:6,borderLeft:`3px solid ${GOLD}`}}>
+              <div style={{fontSize:11,fontWeight:"bold",color:GOLD,marginBottom:4}}>売却を検討する場合</div>
+              {editingAI?<textarea style={{...TAStyle,minHeight:60}} value={draftReport?.saleAdvice||""} onChange={e=>updDraft("saleAdvice",e.target.value)}/>:<div style={{fontSize:12,color:"#333",lineHeight:1.6}}>{r.saleAdvice}</div>}
+            </div>
           </div>
         </div>
       </>):(<div style={{...S.card(),marginBottom:14,textAlign:"center",padding:40}} className="no-print"><div style={{fontSize:32,marginBottom:12}}>🤖</div><div style={{fontSize:15,color:"#555",marginBottom:8}}>AI分析レポートが未生成です</div><div style={{fontSize:12,color:"#888",marginBottom:16}}>物件情報を入力してAIレポートを生成すると詳細な分析が表示されます</div><button onClick={onEdit} style={S.btn(NAVY)}>✏️ 編集してAIレポートを生成</button></div>)}
