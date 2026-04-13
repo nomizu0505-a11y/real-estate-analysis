@@ -200,8 +200,10 @@ function App(){
   };
 
   const applyParsed=p=>{
-    const fields=["name","address","station","builtDate","builtYear","structure","area","balcony","floor","totalUnits","landRight","laundry","rent","managementFee","repairFund","otherFee","feeNote","managementCompany","currentStatus","deliveryDate","askingPrice","loanBalance","sublease","contractDate","notes"];
-    setForm(prev=>{const u={...prev};fields.forEach(k=>{if(p[k]!=null&&p[k]!=="")u[k]=p[k];});return u;});
+    const fields=["name","address","station","builtDate","builtYear","structure","area","balcony","floor","totalUnits","landRight","laundry","rent","managementFee","repairFund","otherFee","feeNote","managementCompany","currentStatus","deliveryDate","askingPrice","sublease","contractDate","notes"];
+    setForm(prev=>{const u={...prev};fields.forEach(k=>{if(p[k]!=null&&p[k]!=="")u[k]=p[k];});
+      if(p.loanBalance!=null&&p.loanBalance!=="")u.loanBalance=Number(p.loanBalance)*10000;
+      return u;});
   };
 
   const readText=async()=>{
@@ -322,7 +324,7 @@ function PropCard({p,onView,onEdit,onDelete}){
       <div style={{fontWeight:"bold",fontSize:15,color:NAVY,marginBottom:4,paddingRight:90,lineHeight:1.3}}>{p.name||"（物件名未設定）"}</div>
       <div style={{fontSize:12,color:"#666",marginBottom:10}}>{p.station||p.address||"所在地未設定"}</div>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:7,marginBottom:8}}>
-        {[{l:"月間CF",v:`${cf>=0?"+":""}${fmt(cf)}円`,c:cf>=0?GREEN:RED},{l:"表面利回り",v:yl?yl.toFixed(1)+"%":"−",c:yl&&yl>=5?GREEN:yl?"#e07b00":RED},{l:"ローン残債",v:p.loanBalance?(Number(p.loanBalance)*10000).toLocaleString()+"円":"−",c:"#555"}].map(m=>(
+        {[{l:"月間CF",v:`${cf>=0?"+":""}${fmt(cf)}円`,c:cf>=0?GREEN:RED},{l:"表面利回り",v:yl?yl.toFixed(1)+"%":"−",c:yl&&yl>=5?GREEN:yl?"#e07b00":RED},{l:"ローン残債",v:p.loanBalance?Number(p.loanBalance).toLocaleString()+"円":"−",c:"#555"}].map(m=>(
           <div key={m.l} style={{background:"#f8fafc",borderRadius:6,padding:"6px 8px",textAlign:"center"}}><div style={{fontSize:10,color:"#888",marginBottom:2}}>{m.l}</div><div style={{fontSize:13,fontWeight:"bold",color:m.c}}>{m.v}</div></div>
         ))}
       </div>
@@ -470,14 +472,14 @@ function TabFinancial({data,upd,cf,yl}){
         <FRow label="　うち元本（円）" value={data.monthlyPrincipal} onChange={v=>upd("monthlyPrincipal",v)} type="number" placeholder="例：27836"/>
         <FRow label="　うち金利（円）" value={data.monthlyInterest} onChange={v=>upd("monthlyInterest",v)} type="number" placeholder="例：19500"/>
         <FRow label="月額火災保険料（円）※0=複数年契約" value={data.fireInsurance} onChange={v=>upd("fireInsurance",v)} type="number" placeholder="0"/>
-        <FRow label="ローン残債（万円）" value={data.loanBalance} onChange={v=>upd("loanBalance",v)} type="number" placeholder="例：1791"/>
+        <FRow label="ローン残債（円）" value={data.loanBalance} onChange={v=>upd("loanBalance",v)} type="number" placeholder="例：17910000"/>
         <FRow label="ローン金利（%）" value={data.loanRate} onChange={v=>upd("loanRate",v)} type="number" placeholder="例：1.81"/>
         <FRow label="ローン残年数（年）" value={data.loanRemainingYears} onChange={v=>upd("loanRemainingYears",v)} type="number" placeholder="例：15"/>
         <FRow label="契約日" value={data.contractDate} onChange={v=>upd("contractDate",v)} placeholder="例：2018年11月30日"/>
         <FRow label="年間固定資産税（円）" value={data.propertyTax} onChange={v=>upd("propertyTax",v)} type="number" placeholder="60000"/>
         <FRow label="年間減価償却費（円）" value={data.depreciation} onChange={v=>upd("depreciation",v)} type="number" placeholder="例：151920"/>
         <FRow label="所得税・住民税率（%）" value={data.taxRate} onChange={v=>upd("taxRate",v)} type="number" placeholder="30"/>
-        <FRow label="初期投資額（万円）" value={data.initialInvestment} onChange={v=>upd("initialInvestment",v)} type="number" placeholder="頭金＋諸費用"/>
+        <FRow label="初期投資額（円）" value={data.initialInvestment} onChange={v=>upd("initialInvestment",v)} type="number" placeholder="例：2000000（頭金＋諸費用）"/>
       </div>
       <div style={{padding:"12px 16px",background:cf>=0?"#f0fff4":"#fff0f0",borderRadius:8,borderLeft:`4px solid ${cf>=0?GREEN:RED}`,marginBottom:16}}>
         <div style={{fontSize:12,color:"#666",marginBottom:4}}>月間キャッシュフロー（賃料−管理費−修繕−ローン）</div>
@@ -518,7 +520,7 @@ function TabSale({data,upd}){
         <div style={{gridColumn:"1/-1",padding:"8px 12px",background:"#f0f4ff",borderRadius:6,fontSize:11,color:"#666"}}>💡 司法書士費用（5万円固定）・管理委託解除費用・一括返済手数料はレポート画面の売却シナリオ試算で入力できます</div>
       </div>
       {scenarios.map((s,i)=>{
-        const c=(s.price*0.03+60000)*1.1;const res=(Number(data.loanBalance)||0)*10000;
+        const c=(s.price*0.03+60000)*1.1;const res=Number(data.loanBalance)||0;
         const net=s.price-c-(Number(data.notaryFee)||0)-(Number(data.prepaymentFee)||0)-res;
         return(<div key={i} style={{padding:"10px 14px",background:"#f8fafc",borderRadius:7,marginBottom:8,borderLeft:`3px solid ${s.color}`}}>
           <div style={{fontSize:12,fontWeight:"bold",color:s.color,marginBottom:4}}>{s.label}</div>
@@ -834,7 +836,7 @@ function TaxCFSection({p}){
 
   // 補足
   const postLoanMonthly=rent-mgmt-deleg;
-  const loanBalanceYen=(Number(p.loanBalance)||0)*10000;
+  const loanBalanceYen=Number(p.loanBalance)||0;
 
   const TRow=({lbl,v,bold,color,bg})=>(
     <tr style={{borderBottom:"1px solid #f5f5f5",background:bg||"transparent"}}>
@@ -937,7 +939,7 @@ function TaxCFSection({p}){
               {loanBalanceYen>0&&(
                 <div style={{fontSize:11,color:"#888",marginTop:4,padding:"4px 8px",background:"rgba(255,255,255,.7)",borderRadius:4}}>
                   ⇒ 30歳男性・30年満了・掛け捨て定期保険の保険料は<br/>
-                  保険金額{p.loanBalance}万円で 約2,000〜3,000円/月 程度
+                  保険金額{fmtM(Number(p.loanBalance))}で 約2,000〜3,000円/月 程度
                 </div>
               )}
             </div>
@@ -971,7 +973,7 @@ function ReportView({prop:p,onEdit,onBack,onPrint,onUpdateFees}){
   const realEstate=annualRent-annualMgmt-annualInterest-annualTax-annualDepr;
   const taxBurden=realEstate*taxR;
   const NOTARY_FEE=50000;
-  const saleScenarios=[{label:"保守的",price:Number(p.salePriceLow)||0,color:"#888"},{label:"相場",price:Number(p.salePrice)||0,color:NAVY2},{label:"チャレンジ",price:Number(p.salePriceHigh)||0,color:GOLD}].filter(s=>s.price>0).map(s=>{const c=(s.price*0.03+60000)*1.1;const res=(Number(p.loanBalance)||0)*10000;const net=s.price-c-NOTARY_FEE-prepayFee-cancelFee-res;return{...s,commission:c,residual:res,net};});
+  const saleScenarios=[{label:"保守的",price:Number(p.salePriceLow)||0,color:"#888"},{label:"相場",price:Number(p.salePrice)||0,color:NAVY2},{label:"チャレンジ",price:Number(p.salePriceHigh)||0,color:GOLD}].filter(s=>s.price>0).map(s=>{const c=(s.price*0.03+60000)*1.1;const res=Number(p.loanBalance)||0;const net=s.price-c-NOTARY_FEE-prepayFee-cancelFee-res;return{...s,commission:c,residual:res,net};});
   const TRow=({lbl,v,bold,color})=>(<tr style={{borderBottom:"1px solid #f5f5f5"}}><td style={{padding:"6px 10px",fontSize:12,color:"#555"}}>{lbl}</td><td style={{padding:"6px 10px",fontSize:12,fontWeight:bold?"bold":"normal",color:color||"#333",textAlign:"right"}}>{v}</td></tr>);
 
   const hasSimData=(Number(p.rent)||0)>0;
@@ -1005,7 +1007,7 @@ function ReportView({prop:p,onEdit,onBack,onPrint,onUpdateFees}){
         <div style={S.card()} className="shadow-card">
           <div style={{fontWeight:"bold",fontSize:14,color:NAVY,marginBottom:10}}>💹 財務サマリー</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:7,marginBottom:12}}>
-            {[{l:"月間CF",v:`${cf>=0?"+":""}${fmtY(cf)}`,c:cf>=0?GREEN:RED},{l:"月額賃料",v:fmtY(p.rent),c:"#333"},{l:"管理費+修繕",v:fmtY((Number(p.managementFee)||0)+(Number(p.repairFund)||0)),c:"#333"},{l:"ローン返済",v:fmtY(p.loanPayment),c:"#333"},{l:"ローン残債",v:p.loanBalance?(Number(p.loanBalance)*10000).toLocaleString()+"円":"−",c:"#555"},{l:"表面利回り",v:yl?yl.toFixed(2)+"%":"−",c:yl&&yl>=5?GREEN:"#e07b00"}].map(m=>(<div key={m.l} style={{background:"#f8fafc",borderRadius:6,padding:"7px 9px",textAlign:"center"}}><div style={{fontSize:10,color:"#888",marginBottom:2}}>{m.l}</div><div style={{fontSize:13,fontWeight:"bold",color:m.c}}>{m.v}</div></div>))}
+            {[{l:"月間CF",v:`${cf>=0?"+":""}${fmtY(cf)}`,c:cf>=0?GREEN:RED},{l:"月額賃料",v:fmtY(p.rent),c:"#333"},{l:"管理費+修繕",v:fmtY((Number(p.managementFee)||0)+(Number(p.repairFund)||0)),c:"#333"},{l:"ローン返済",v:fmtY(p.loanPayment),c:"#333"},{l:"ローン残債",v:p.loanBalance?Number(p.loanBalance).toLocaleString()+"円":"−",c:"#555"},{l:"表面利回り",v:yl?yl.toFixed(2)+"%":"−",c:yl&&yl>=5?GREEN:"#e07b00"}].map(m=>(<div key={m.l} style={{background:"#f8fafc",borderRadius:6,padding:"7px 9px",textAlign:"center"}}><div style={{fontSize:10,color:"#888",marginBottom:2}}>{m.l}</div><div style={{fontSize:13,fontWeight:"bold",color:m.c}}>{m.v}</div></div>))}
           </div>
           {p.askingPrice&&<div style={{padding:"7px 12px",background:"#f0f4ff",borderRadius:6,fontSize:12}}><strong>希望販売価格：</strong>{p.askingPrice}万円</div>}
           {p.delegationFee&&<div style={{padding:"5px 12px",marginTop:6,background:"#f8fafc",borderRadius:6,fontSize:11,color:"#666"}}>業務委託費：{fmtY(p.delegationFee)}/月</div>}
