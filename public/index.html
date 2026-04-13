@@ -267,7 +267,7 @@ function App(){
       <main style={{padding:"20px",maxWidth:1200,margin:"0 auto"}}>
         {view==="list"&&<ListView props={filtered} total={props.length} search={search} setSearch={setSearch} sortBy={sortBy} setSortBy={setSortBy} fStatus={fStatus} setFStatus={setFStatus} onNew={doNew} onView={doView} onEdit={doEdit} onDelete={doDelete}/>}
         {view==="form"&&<FormView data={form} upd={upd} fTab={fTab} setFTab={setFTab} maText={maText} setMaText={setMaText} upFile={upFile} setUpFile={setUpFile} fileRef={fileRef} onReadText={readText} onReadFile={readFile} onGenReport={genReport} onSave={doSave} onCancel={()=>setView("list")} aiMsg={aiMsg} loading={loading} isEdit={isEdit} onSearch={searchByName}/>}
-        {view==="report"&&selProp&&<ReportView prop={selProp} onEdit={()=>doEdit(selProp)} onBack={()=>setView("list")} onPrint={doPrint}/>}
+        {view==="report"&&selProp&&<ReportView prop={selProp} onEdit={()=>doEdit(selProp)} onBack={()=>setView("list")} onPrint={doPrint} onUpdateFees={fees=>{const updated={...selProp,...fees,updatedAt:now()};persist(props.map(x=>x.id===selId?updated:x));}}/>}
       </main>
     </div>
   );
@@ -515,9 +515,7 @@ function TabSale({data,upd}){
         <FRow label="相場売却価格（万円）" value={spM} onChange={v=>upd("salePrice",v*10000)} type="number" placeholder="例：1850"/>
         <FRow label="チャレンジ価格（万円）" value={spH} onChange={v=>upd("salePriceHigh",v*10000)} type="number" placeholder="例：2000"/>
         <FRow label="保守的価格（万円）" value={spL} onChange={v=>upd("salePriceLow",v*10000)} type="number" placeholder="例：1650"/>
-        <FRow label="司法書士・印紙代（円）" value={data.notaryFee} onChange={v=>upd("notaryFee",v)} type="number" placeholder="50000"/>
-        <FRow label="一括返済手数料（円）" value={data.prepaymentFee} onChange={v=>upd("prepaymentFee",v)} type="number" placeholder="0"/>
-        <FRow label="賃管解除費用（円）" value={data.cancellationFee} onChange={v=>upd("cancellationFee",v)} type="number" placeholder="0"/>
+        <div style={{gridColumn:"1/-1",padding:"8px 12px",background:"#f0f4ff",borderRadius:6,fontSize:11,color:"#666"}}>💡 司法書士費用（5万円固定）・管理委託解除費用・一括返済手数料はレポート画面の売却シナリオ試算で入力できます</div>
       </div>
       {scenarios.map((s,i)=>{
         const c=(s.price*0.03+60000)*1.1;const res=(Number(data.loanBalance)||0)*10000;
@@ -953,7 +951,15 @@ function TaxCFSection({p}){
 /* ═══════════════════════════════════════════════
    レポートビュー（メイン）
    ═══════════════════════════════════════════════ */
-function ReportView({prop:p,onEdit,onBack,onPrint}){
+function ReportView({prop:p,onEdit,onBack,onPrint,onUpdateFees}){
+  const [prepayFee,setPrepayFee]=useState(Number(p.prepaymentFee)||0);
+  const [cancelFee,setCancelFee]=useState(Number(p.cancellationFee)||0);
+  const updateFee=(key,val)=>{
+    const n=Math.max(0,Number(val)||0);
+    const next={prepaymentFee:key==='p'?n:prepayFee,cancellationFee:key==='c'?n:cancelFee};
+    if(key==='p')setPrepayFee(n); else setCancelFee(n);
+    onUpdateFees&&onUpdateFees(next);
+  };
   const r=p.aiReport;const cf=getCF(p);const yl=getYld(p);
   const annualRent=(Number(p.rent)||0)*12;
   const annualMgmt=((Number(p.managementFee)||0)+(Number(p.repairFund)||0))*12;
@@ -964,7 +970,8 @@ function ReportView({prop:p,onEdit,onBack,onPrint}){
   const taxR=(Number(p.taxRate)||30)/100;
   const realEstate=annualRent-annualMgmt-annualInterest-annualTax-annualDepr;
   const taxBurden=realEstate*taxR;
-  const saleScenarios=[{label:"保守的",price:Number(p.salePriceLow)||0,color:"#888"},{label:"相場",price:Number(p.salePrice)||0,color:NAVY2},{label:"チャレンジ",price:Number(p.salePriceHigh)||0,color:GOLD}].filter(s=>s.price>0).map(s=>{const c=(s.price*0.03+60000)*1.1;const res=(Number(p.loanBalance)||0)*10000;const net=s.price-c-(Number(p.notaryFee)||50000)-(Number(p.prepaymentFee)||0)-(Number(p.cancellationFee)||0)-res;return{...s,commission:c,residual:res,net};});
+  const NOTARY_FEE=50000;
+  const saleScenarios=[{label:"保守的",price:Number(p.salePriceLow)||0,color:"#888"},{label:"相場",price:Number(p.salePrice)||0,color:NAVY2},{label:"チャレンジ",price:Number(p.salePriceHigh)||0,color:GOLD}].filter(s=>s.price>0).map(s=>{const c=(s.price*0.03+60000)*1.1;const res=(Number(p.loanBalance)||0)*10000;const net=s.price-c-NOTARY_FEE-prepayFee-cancelFee-res;return{...s,commission:c,residual:res,net};});
   const TRow=({lbl,v,bold,color})=>(<tr style={{borderBottom:"1px solid #f5f5f5"}}><td style={{padding:"6px 10px",fontSize:12,color:"#555"}}>{lbl}</td><td style={{padding:"6px 10px",fontSize:12,fontWeight:bold?"bold":"normal",color:color||"#333",textAlign:"right"}}>{v}</td></tr>);
 
   const hasSimData=(Number(p.rent)||0)>0;
@@ -1042,8 +1049,66 @@ function ReportView({prop:p,onEdit,onBack,onPrint}){
       {p.rentPeriods?.some(v=>v)&&(<div style={{...S.card(),marginBottom:14}} className="print-avoid shadow-card"><div style={{fontWeight:"bold",fontSize:14,color:NAVY,marginBottom:10}}>📉 賃料推移シミュレーション</div><div style={{display:"flex",gap:8,flexWrap:"wrap"}}>{["1〜5年目","6〜10年目","11〜15年目","16〜20年目","21〜25年目","26〜30年目"].map((lbl,i)=>{const v=p.rentPeriods[i];const base=Number(p.rent)||1;const pct=v?((Number(v)-base)/base*100).toFixed(1):null;return(<div key={i} style={{flex:"1 1 90px",background:"#f8fafc",borderRadius:6,padding:"8px 10px",textAlign:"center"}}><div style={{fontSize:10,color:"#888",marginBottom:2}}>{lbl}</div><div style={{fontSize:13,fontWeight:"bold",color:NAVY}}>{v?fmtY(v):"−"}</div>{pct&&i>0&&<div style={{fontSize:11,color:Number(pct)>=0?GREEN:RED}}>{Number(pct)>0?"+":""}{pct}%</div>}</div>);})}</div></div>)}
 
       {/* 6. 売却シナリオ試算 */}
-      {saleScenarios.length>0&&(<div style={{...S.card(),marginBottom:14}} className="print-avoid shadow-card"><div style={{fontWeight:"bold",fontSize:14,color:NAVY,marginBottom:10}}>🏷️ 売却シナリオ試算</div><div style={{display:"grid",gridTemplateColumns:`repeat(${saleScenarios.length},1fr)`,gap:10}}>{saleScenarios.map((s,i)=>(<div key={i} style={{border:`2px solid ${s.color}20`,borderTop:`3px solid ${s.color}`,borderRadius:8,padding:12,background:`${s.color}08`}}><div style={{fontSize:12,fontWeight:"bold",color:s.color,marginBottom:6}}>{s.label}シナリオ</div><table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}><tbody>{[["売却価格",fmtM(s.price)],["仲介手数料",`▲${fmtM(s.commission)}`],["ローン返済",`▲${fmtM(s.residual)}`]].map(([l,v])=>(<tr key={l}><td style={{padding:"3px 0",color:"#666"}}>{l}</td><td style={{textAlign:"right"}}>{v}</td></tr>))}<tr style={{borderTop:`1px solid ${s.color}40`}}><td style={{padding:"5px 0",fontWeight:"bold"}}>手残り</td><td style={{textAlign:"right",fontWeight:"bold",color:s.net>=0?GREEN:RED,fontSize:14}}>{s.net>=0?"+":""}{fmtM(s.net)}</td></tr></tbody></table></div>))}</div></div>)}
-
+      {saleScenarios.length>0&&(
+        <div style={{...S.card(),marginBottom:14}} className="print-avoid shadow-card">
+          <div style={{fontWeight:"bold",fontSize:14,color:NAVY,marginBottom:8}}>🏷️ 売却シナリオ試算</div>
+          <div style={{marginBottom:12,padding:"8px 12px",background:"#f0f4ff",borderRadius:6,fontSize:11,color:"#555",border:`1px solid ${NAVY2}33`}}>
+            💡 <strong>管理委託解除費用・一括返済手数料</strong>は保守的シナリオで入力 → 全シナリオに自動反映
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:`repeat(${saleScenarios.length},1fr)`,gap:10}}>
+            {saleScenarios.map((s,i)=>{
+              const isCons=s.label==="保守的";
+              const inpStyle={width:90,textAlign:"right",padding:"2px 6px",border:"1px solid #cdd5e0",borderRadius:4,fontSize:11,fontFamily:"inherit"};
+              return(
+                <div key={i} style={{border:`2px solid ${s.color}20`,borderTop:`3px solid ${s.color}`,borderRadius:8,padding:12,background:`${s.color}08`}}>
+                  <div style={{fontSize:12,fontWeight:"bold",color:s.color,marginBottom:8}}>{s.label}シナリオ</div>
+                  <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
+                    <tbody>
+                      <tr><td style={{padding:"4px 0",color:"#666"}}>売却価格</td><td style={{textAlign:"right"}}>{fmtM(s.price)}</td></tr>
+                      <tr><td style={{padding:"4px 0",color:"#666"}}>付護手数料</td><td style={{textAlign:"right",color:RED}}>▲{fmtM(s.commission)}</td></tr>
+                      <tr><td style={{padding:"4px 0",color:"#666"}}>ローン残債返済</td><td style={{textAlign:"right",color:RED}}>▲{fmt(s.residual)}円</td></tr>
+                      <tr>
+                        <td style={{padding:"4px 0",color:"#666"}}>司法書士費用<span style={{fontSize:10,color:"#aaa",marginLeft:4}}>(固定)</span></td>
+                        <td style={{textAlign:"right",color:RED}}>▲50,000円</td>
+                      </tr>
+                      <tr>
+                        <td style={{padding:"4px 0",color:"#666"}}>管理委託解除費用</td>
+                        <td style={{textAlign:"right"}}>
+                          {isCons
+                            ?<div style={{display:"flex",alignItems:"center",justifyContent:"flex-end",gap:3}}>
+                               <span style={{color:RED}}>▲</span>
+                               <input type="number" min="0" value={cancelFee} onChange={e=>updateFee('c',e.target.value)} style={inpStyle}/>
+                               <span style={{color:"#555"}}>円</span>
+                             </div>
+                            :<span style={{color:RED}}>▲{fmt(cancelFee)}円</span>
+                          }
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style={{padding:"4px 0",color:"#666"}}>一括返済手数料</td>
+                        <td style={{textAlign:"right"}}>
+                          {isCons
+                            ?<div style={{display:"flex",alignItems:"center",justifyContent:"flex-end",gap:3}}>
+                               <span style={{color:RED}}>▲</span>
+                               <input type="number" min="0" value={prepayFee} onChange={e=>updateFee('p',e.target.value)} style={inpStyle}/>
+                               <span style={{color:"#555"}}>円</span>
+                             </div>
+                            :<span style={{color:RED}}>▲{fmt(prepayFee)}円</span>
+                          }
+                        </td>
+                      </tr>
+                      <tr style={{borderTop:`2px solid ${s.color}40`}}>
+                        <td style={{padding:"6px 0",fontWeight:"bold",fontSize:13}}>手残り</td>
+                        <td style={{textAlign:"right",fontWeight:"bold",color:s.net>=0?GREEN:RED,fontSize:15}}>{s.net>=0?"+":""}{fmtM(s.net)}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
       {/* 7. 備考 */}
       {p.notes&&(<div style={{...S.card(),marginBottom:14}} className="print-avoid shadow-card"><div style={{fontWeight:"bold",fontSize:13,color:NAVY,marginBottom:6}}>📝 備考・メモ</div><div style={{fontSize:12,color:"#444",lineHeight:1.7,whiteSpace:"pre-wrap"}}>{p.notes}</div></div>)}
 
